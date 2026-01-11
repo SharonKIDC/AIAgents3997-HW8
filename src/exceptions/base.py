@@ -65,3 +65,13 @@ class NotFoundError(TenantManagementError):
         - Building not found
         - Apartment not found
     """
+
+
+class CommunicationError(TenantManagementError):
+    """Exception raised for communication errors.
+
+    Examples:
+        - Failed to connect to MCP server
+        - Request timeout
+        - Network errors
+    """
