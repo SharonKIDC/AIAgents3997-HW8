@@ -35,21 +35,18 @@ class DataValidator:
         valid_buildings = self.get_valid_building_numbers()
         if building_number not in valid_buildings:
             raise ValidationError(
-                f"Invalid building number: {building_number}",
-                {"valid_buildings": valid_buildings}
+                f"Invalid building number: {building_number}", {"valid_buildings": valid_buildings}
             )
         return True
 
-    def validate_apartment_number(
-        self, building_number: int, apartment_number: int
-    ) -> bool:
+    def validate_apartment_number(self, building_number: int, apartment_number: int) -> bool:
         """Validate apartment number is within range for building."""
         self.validate_building_number(building_number)
         max_apartments = self.get_apartment_count(building_number)
         if apartment_number < 1 or apartment_number > max_apartments:
             raise ValidationError(
                 f"Invalid apartment number: {apartment_number}",
-                {"building": building_number, "max_apartments": max_apartments}
+                {"building": building_number, "max_apartments": max_apartments},
             )
         return True
 
@@ -57,27 +54,22 @@ class DataValidator:
         """Validate phone number format."""
         cleaned = phone.replace("-", "").replace(" ", "").replace("+", "")
         if not cleaned.isdigit():
-            raise ValidationError(
-                "Phone number must contain only digits",
-                {"phone": phone}
-            )
+            raise ValidationError("Phone number must contain only digits", {"phone": phone})
         min_len = self._config.get("validation.phone_min_length", 9)
         max_len = self._config.get("validation.phone_max_length", 15)
         if len(cleaned) < min_len or len(cleaned) > max_len:
             raise ValidationError(
                 f"Phone must be {min_len}-{max_len} digits",
-                {"phone": phone, "length": len(cleaned)}
+                {"phone": phone, "length": len(cleaned)},
             )
         return True
 
-    def validate_dates(
-        self, move_in: date, move_out: date = None
-    ) -> bool:
+    def validate_dates(self, move_in: date, move_out: date = None) -> bool:
         """Validate move-in and move-out dates."""
         if move_out and move_out < move_in:
             raise ValidationError(
                 "Move-out date cannot be before move-in date",
-                {"move_in": str(move_in), "move_out": str(move_out)}
+                {"move_in": str(move_in), "move_out": str(move_out)},
             )
         return True
 
@@ -85,10 +77,7 @@ class DataValidator:
         """Validate parking slot format."""
         for slot in [slot1, slot2]:
             if slot and not slot.strip():
-                raise ValidationError(
-                    "Parking slot cannot be empty string",
-                    {"slot": slot}
-                )
+                raise ValidationError("Parking slot cannot be empty string", {"slot": slot})
         return True
 
     def validate_tenant_data(self, data: Dict[str, Any]) -> Tuple[bool, List[str]]:
@@ -100,8 +89,7 @@ class DataValidator:
             errors.append(str(e))
         try:
             self.validate_apartment_number(
-                data.get("building_number", 0),
-                data.get("apartment_number", 0)
+                data.get("building_number", 0), data.get("apartment_number", 0)
             )
         except ValidationError as e:
             errors.append(str(e))
@@ -124,13 +112,11 @@ class DataValidator:
                 errors.append("Owner last name required")
         return len(errors) == 0, errors
 
-    def validate_ownership_change(
-        self, change_date: date, current_move_in: date
-    ) -> bool:
+    def validate_ownership_change(self, change_date: date, current_move_in: date) -> bool:
         """Validate ownership change date."""
         if change_date < current_move_in:
             raise ValidationError(
                 "Ownership change date cannot be before current move-in",
-                {"change_date": str(change_date), "move_in": str(current_move_in)}
+                {"change_date": str(change_date), "move_in": str(current_move_in)},
             )
         return True

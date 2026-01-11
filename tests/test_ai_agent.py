@@ -15,9 +15,7 @@ class TestReportResult:
     def test_report_result_creation(self):
         """Test report result creation."""
         result = ReportResult(
-            content="# Report\n\nContent here",
-            format="markdown",
-            metadata={"type": "occupancy"}
+            content="# Report\n\nContent here", format="markdown", metadata={"type": "occupancy"}
         )
         assert result.content.startswith("# Report")
         assert result.format == "markdown"
@@ -35,9 +33,7 @@ class TestMockLLMProvider:
     def test_generate_with_user_message(self):
         """Test generation with user message."""
         provider = MockLLMProvider()
-        messages = [
-            {"role": "user", "content": {"type": "text", "text": "Generate report"}}
-        ]
+        messages = [{"role": "user", "content": {"type": "text", "text": "Generate report"}}]
         result = provider.generate(messages)
         assert "Report" in result
         assert "Generate report" in result
@@ -70,7 +66,7 @@ class TestReportAgent:
         """Test occupancy report generation."""
         mock_client.generate_prompt.return_value = MCPResponse(
             success=True,
-            data={"messages": [{"role": "user", "content": {"text": "Occupancy report"}}]}
+            data={"messages": [{"role": "user", "content": {"text": "Occupancy report"}}]},
         )
         result = agent.generate_occupancy_report(building=11)
         assert result.content is not None
@@ -87,8 +83,7 @@ class TestReportAgent:
     def test_generate_tenant_list_report(self, agent, mock_client):
         """Test tenant list report generation."""
         mock_client.generate_prompt.return_value = MCPResponse(
-            success=True,
-            data={"messages": [{"role": "user", "content": {"text": "Tenant list"}}]}
+            success=True, data={"messages": [{"role": "user", "content": {"text": "Tenant list"}}]}
         )
         result = agent.generate_tenant_list_report(building=13, include_contacts=True)
         assert result.metadata["report_type"] == "tenant_list"
@@ -97,7 +92,7 @@ class TestReportAgent:
         """Test history report generation."""
         mock_client.generate_prompt.return_value = MCPResponse(
             success=True,
-            data={"messages": [{"role": "user", "content": {"text": "History report"}}]}
+            data={"messages": [{"role": "user", "content": {"text": "History report"}}]},
         )
         result = agent.generate_history_report(building=11, apartment=5)
         assert result.metadata["report_type"] == "history"
@@ -106,8 +101,7 @@ class TestReportAgent:
     def test_process_custom_query(self, agent, mock_client):
         """Test custom query processing."""
         mock_client.generate_prompt.return_value = MCPResponse(
-            success=True,
-            data={"messages": [{"role": "user", "content": {"text": "Custom query"}}]}
+            success=True, data={"messages": [{"role": "user", "content": {"text": "Custom query"}}]}
         )
         result = agent.process_custom_query("Who lives in apartment 1?")
         assert result.metadata["report_type"] == "custom"
@@ -145,7 +139,7 @@ class TestPDFGenerator:
         pdf_bytes = generator.generate(markdown, title="Test")
         assert pdf_bytes is not None
         assert len(pdf_bytes) > 0
-        assert pdf_bytes[:4] == b'%PDF'
+        assert pdf_bytes[:4] == b"%PDF"
 
     def test_generate_pdf_with_table(self, generator):
         """Test PDF generation with table."""
@@ -156,7 +150,7 @@ class TestPDFGenerator:
 | Test | 123   |
 """
         pdf_bytes = generator.generate(markdown, title="Table Report")
-        assert pdf_bytes[:4] == b'%PDF'
+        assert pdf_bytes[:4] == b"%PDF"
 
     def test_generate_pdf_with_list(self, generator):
         """Test PDF generation with list."""
@@ -167,7 +161,7 @@ class TestPDFGenerator:
 * Item 3
 """
         pdf_bytes = generator.generate(markdown, title="List Report")
-        assert pdf_bytes[:4] == b'%PDF'
+        assert pdf_bytes[:4] == b"%PDF"
 
     def test_generate_pdf_with_formatting(self, generator):
         """Test PDF with Markdown formatting."""
@@ -179,7 +173,7 @@ class TestPDFGenerator:
 Some content here.
 """
         pdf_bytes = generator.generate(markdown, title="Formatted Report")
-        assert pdf_bytes[:4] == b'%PDF'
+        assert pdf_bytes[:4] == b"%PDF"
 
     def test_save_to_file(self, generator, tmp_path):
         """Test saving PDF to file."""
@@ -187,4 +181,4 @@ Some content here.
         filepath = tmp_path / "test.pdf"
         generator.save_to_file(markdown, str(filepath), title="Test")
         assert filepath.exists()
-        assert filepath.read_bytes()[:4] == b'%PDF'
+        assert filepath.read_bytes()[:4] == b"%PDF"

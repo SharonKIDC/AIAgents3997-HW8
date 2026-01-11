@@ -10,8 +10,11 @@ import requests
 from src.config import get_config
 from src.exceptions import CommunicationError
 from src.communication.base import (
-    BaseMCPClient, MCPResponse, ToolDefinition,
-    ResourceDefinition, PromptDefinition
+    BaseMCPClient,
+    MCPResponse,
+    ToolDefinition,
+    ResourceDefinition,
+    PromptDefinition,
 )
 
 
@@ -26,31 +29,23 @@ class MCPHttpClient(BaseMCPClient):
         self._session = requests.Session()
 
     def _request(
-        self, method: str, endpoint: str,
+        self,
+        method: str,
+        endpoint: str,
         json_data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None
+        params: Optional[Dict[str, Any]] = None,
     ) -> MCPResponse:
         """Make HTTP request to MCP server."""
         url = f"{self._base_url}{endpoint}"
         try:
             response = self._session.request(
-                method=method,
-                url=url,
-                json=json_data,
-                params=params,
-                timeout=self._timeout
+                method=method, url=url, json=json_data, params=params, timeout=self._timeout
             )
             if response.status_code >= 400:
                 return MCPResponse(
-                    success=False,
-                    error=response.text,
-                    status_code=response.status_code
+                    success=False, error=response.text, status_code=response.status_code
                 )
-            return MCPResponse(
-                success=True,
-                data=response.json(),
-                status_code=response.status_code
-            )
+            return MCPResponse(success=True, data=response.json(), status_code=response.status_code)
         except requests.exceptions.ConnectionError as e:
             raise CommunicationError(f"Connection failed: {e}") from e
         except requests.exceptions.Timeout as e:
@@ -70,9 +65,7 @@ class MCPHttpClient(BaseMCPClient):
         tools = response.data.get("tools", [])
         return [
             ToolDefinition(
-                name=t["name"],
-                description=t["description"],
-                parameters=t.get("parameters", {})
+                name=t["name"], description=t["description"], parameters=t.get("parameters", {})
             )
             for t in tools
         ]
@@ -89,11 +82,7 @@ class MCPHttpClient(BaseMCPClient):
             return []
         resources = response.data.get("resources", [])
         return [
-            ResourceDefinition(
-                uri=r["uri"],
-                name=r["name"],
-                description=r["description"]
-            )
+            ResourceDefinition(uri=r["uri"], name=r["name"], description=r["description"])
             for r in resources
         ]
 
@@ -110,9 +99,7 @@ class MCPHttpClient(BaseMCPClient):
         prompts = response.data.get("prompts", [])
         return [
             PromptDefinition(
-                name=p["name"],
-                description=p["description"],
-                arguments=p.get("arguments", [])
+                name=p["name"], description=p["description"], arguments=p.get("arguments", [])
             )
             for p in prompts
         ]
@@ -120,8 +107,7 @@ class MCPHttpClient(BaseMCPClient):
     def generate_prompt(self, name: str, arguments: Dict[str, Any]) -> MCPResponse:
         """Generate a prompt with arguments."""
         return self._request(
-            "POST", "/prompts/generate",
-            json_data={"name": name, "arguments": arguments}
+            "POST", "/prompts/generate", json_data={"name": name, "arguments": arguments}
         )
 
     def close(self) -> None:

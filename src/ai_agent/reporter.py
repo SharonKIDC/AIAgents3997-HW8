@@ -65,8 +65,7 @@ class OpenAIProvider(LLMProvider):
                 text = str(content)
             formatted_messages.append({"role": role, "content": text})
         response = self._client.chat.completions.create(
-            model=self._model,
-            messages=formatted_messages
+            model=self._model, messages=formatted_messages
         )
         return response.choices[0].message.content
 
@@ -100,7 +99,7 @@ class ReportAgent:
         return ReportResult(
             content=content,
             format=self._default_format,
-            metadata={"report_type": "occupancy", "building": building}
+            metadata={"report_type": "occupancy", "building": building},
         )
 
     def generate_tenant_list_report(
@@ -116,7 +115,7 @@ class ReportAgent:
         return ReportResult(
             content=content,
             format=self._default_format,
-            metadata={"report_type": "tenant_list", "building": building}
+            metadata={"report_type": "tenant_list", "building": building},
         )
 
     def generate_history_report(self, building: int, apartment: int) -> ReportResult:
@@ -130,7 +129,7 @@ class ReportAgent:
         return ReportResult(
             content=content,
             format=self._default_format,
-            metadata={"report_type": "history", "building": building, "apartment": apartment}
+            metadata={"report_type": "history", "building": building, "apartment": apartment},
         )
 
     def process_custom_query(self, query: str) -> ReportResult:
@@ -144,7 +143,7 @@ class ReportAgent:
         return ReportResult(
             content=content,
             format=self._default_format,
-            metadata={"report_type": "custom", "query": query}
+            metadata={"report_type": "custom", "query": query},
         )
 
     def close(self) -> None:

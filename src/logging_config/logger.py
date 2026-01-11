@@ -24,8 +24,7 @@ def setup_logging(
     # Default format with timestamp, level, module, and message
     if log_format is None:
         log_format = (
-            "%(asctime)s - %(name)s - %(levelname)s - "
-            "%(filename)s:%(lineno)d - %(message)s"
+            "%(asctime)s - %(name)s - %(levelname)s - " "%(filename)s:%(lineno)d - %(message)s"
         )
 
     # Configure root logger

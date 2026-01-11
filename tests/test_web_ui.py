@@ -42,7 +42,7 @@ class TestWebUIBackend:
         """Test list buildings endpoint."""
         mock_sdk.get_buildings.return_value = [
             BuildingInfo(number=11, total_apartments=17),
-            BuildingInfo(number=13, total_apartments=24)
+            BuildingInfo(number=13, total_apartments=24),
         ]
         response = client.get("/api/buildings")
         assert response.status_code == 200
@@ -83,10 +83,13 @@ class TestWebUIBackend:
     def test_get_tenant(self, client, mock_sdk):
         """Test get tenant endpoint."""
         mock_sdk.get_tenant.return_value = TenantInfo(
-            building_number=11, apartment_number=1,
-            first_name="John", last_name="Doe",
-            phone="0501234567", is_owner=True,
-            move_in_date=date(2024, 1, 15)
+            building_number=11,
+            apartment_number=1,
+            first_name="John",
+            last_name="Doe",
+            phone="0501234567",
+            is_owner=True,
+            move_in_date=date(2024, 1, 15),
         )
         response = client.get("/api/tenants/11/1")
         assert response.status_code == 200
@@ -104,23 +107,24 @@ class TestWebUIBackend:
         """Test create tenant endpoint."""
         mock_sdk.get_tenant.return_value = None  # No existing tenant
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         assert response.json()["success"] is True
 
     def test_update_tenant(self, client, mock_sdk):
         """Test update tenant endpoint."""
         mock_sdk.update_tenant.return_value = {"updated": True}
-        response = client.patch("/api/tenants/11/1", json={
-            "phone": "0509999999"
-        })
+        response = client.patch("/api/tenants/11/1", json={"phone": "0509999999"})
         assert response.status_code == 200
 
     def test_end_tenancy(self, client, mock_sdk):
@@ -193,14 +197,17 @@ class TestNameValidation:
     def test_name_too_short(self, client, mock_sdk):
         """Test validation fails when name is too short."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "J",  # Too short (min 2)
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "J",  # Too short (min 2)
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -210,14 +217,17 @@ class TestNameValidation:
     def test_last_name_too_short(self, client, mock_sdk):
         """Test validation fails when last name is too short."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "D",  # Too short
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "D",  # Too short
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -226,14 +236,17 @@ class TestNameValidation:
     def test_name_with_invalid_characters(self, client, mock_sdk):
         """Test validation fails when name contains invalid characters."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John123",  # Numbers not allowed
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John123",  # Numbers not allowed
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -244,14 +257,17 @@ class TestNameValidation:
     def test_name_with_special_chars_fails(self, client, mock_sdk):
         """Test validation fails when name contains special characters."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John@#$",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John@#$",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -261,14 +277,17 @@ class TestNameValidation:
         """Test validation passes for Hebrew characters."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "יוחנן",  # Hebrew name
-            "last_name": "כהן",  # Hebrew last name
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "יוחנן",  # Hebrew name
+                "last_name": "כהן",  # Hebrew last name
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -277,14 +296,17 @@ class TestNameValidation:
         """Test validation passes for hyphenated names."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "Mary-Jane",
-            "last_name": "O'Connor",
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "Mary-Jane",
+                "last_name": "O'Connor",
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -293,14 +315,17 @@ class TestNameValidation:
         """Test validation passes for names with apostrophes."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "O'Brien",
-            "phone": "0501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "O'Brien",
+                "phone": "0501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -312,14 +337,17 @@ class TestPhoneValidation:
     def test_phone_too_short(self, client, mock_sdk):
         """Test validation fails when phone is too short."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "12345678",  # Too short (min 9)
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "12345678",  # Too short (min 9)
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -329,14 +357,17 @@ class TestPhoneValidation:
     def test_phone_too_long(self, client, mock_sdk):
         """Test validation fails when phone is too long."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "1234567890123456",  # Too long (max 15)
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "1234567890123456",  # Too long (max 15)
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -346,14 +377,17 @@ class TestPhoneValidation:
     def test_phone_with_invalid_characters(self, client, mock_sdk):
         """Test validation fails when phone contains invalid characters."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "050-ABC-1234",  # Letters not allowed
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "050-ABC-1234",  # Letters not allowed
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -363,14 +397,17 @@ class TestPhoneValidation:
         """Test validation passes for phone with dashes."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "050-123-4567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "050-123-4567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -379,14 +416,17 @@ class TestPhoneValidation:
         """Test validation passes for phone with plus sign."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "+972501234567",
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "+972501234567",
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -394,14 +434,17 @@ class TestPhoneValidation:
     def test_phone_with_spaces_fails(self, client, mock_sdk):
         """Test validation fails when phone contains spaces."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "050 123 4567",  # Spaces not allowed
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "050 123 4567",  # Spaces not allowed
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -414,15 +457,18 @@ class TestOwnerInfoValidation:
     def test_renter_without_owner_info_fails(self, client, mock_sdk):
         """Test validation fails when renter doesn't provide owner info."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": False,
-            # Missing owner_info
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": False,
+                # Missing owner_info
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -432,19 +478,22 @@ class TestOwnerInfoValidation:
     def test_renter_with_invalid_owner_first_name(self, client, mock_sdk):
         """Test validation fails when owner first name is invalid."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": False,
-            "owner_info": {
-                "first_name": "X",  # Too short
-                "last_name": "Smith",
-                "phone": "0509876543"
-            }
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": False,
+                "owner_info": {
+                    "first_name": "X",  # Too short
+                    "last_name": "Smith",
+                    "phone": "0509876543",
+                },
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -453,19 +502,22 @@ class TestOwnerInfoValidation:
     def test_renter_with_invalid_owner_last_name(self, client, mock_sdk):
         """Test validation fails when owner last name is invalid."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": False,
-            "owner_info": {
-                "first_name": "Jane",
-                "last_name": "S",  # Too short
-                "phone": "0509876543"
-            }
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": False,
+                "owner_info": {
+                    "first_name": "Jane",
+                    "last_name": "S",  # Too short
+                    "phone": "0509876543",
+                },
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -474,19 +526,22 @@ class TestOwnerInfoValidation:
     def test_renter_with_invalid_owner_phone(self, client, mock_sdk):
         """Test validation fails when owner phone is invalid."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": False,
-            "owner_info": {
-                "first_name": "Jane",
-                "last_name": "Smith",
-                "phone": "123"  # Too short
-            }
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": False,
+                "owner_info": {
+                    "first_name": "Jane",
+                    "last_name": "Smith",
+                    "phone": "123",  # Too short
+                },
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -496,19 +551,18 @@ class TestOwnerInfoValidation:
         """Test validation passes for renter with valid owner info."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": False,
-            "owner_info": {
-                "first_name": "Jane",
-                "last_name": "Smith",
-                "phone": "0509876543"
-            }
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": False,
+                "owner_info": {"first_name": "Jane", "last_name": "Smith", "phone": "0509876543"},
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -517,15 +571,18 @@ class TestOwnerInfoValidation:
         """Test that owners don't need to provide owner_info."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True
-            # No owner_info needed
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                # No owner_info needed
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -537,19 +594,40 @@ class TestFamilyMemberValidation:
     def test_too_many_whatsapp_members(self, client, mock_sdk):
         """Test validation fails when too many WhatsApp members."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {"first_name": "Jane", "last_name": "Doe", "phone": "0502222222", "whatsapp_enabled": True, "palgate_enabled": False},
-                {"first_name": "Bob", "last_name": "Doe", "phone": "0503333333", "whatsapp_enabled": True, "palgate_enabled": False},
-                {"first_name": "Alice", "last_name": "Doe", "phone": "0504444444", "whatsapp_enabled": True, "palgate_enabled": False},
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": False,
+                    },
+                    {
+                        "first_name": "Bob",
+                        "last_name": "Doe",
+                        "phone": "0503333333",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": False,
+                    },
+                    {
+                        "first_name": "Alice",
+                        "last_name": "Doe",
+                        "phone": "0504444444",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": False,
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -559,21 +637,54 @@ class TestFamilyMemberValidation:
     def test_too_many_palgate_members(self, client, mock_sdk):
         """Test validation fails when too many PalGate members."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {"first_name": "Jane", "last_name": "Doe", "phone": "0502222222", "whatsapp_enabled": False, "palgate_enabled": True},
-                {"first_name": "Bob", "last_name": "Doe", "phone": "0503333333", "whatsapp_enabled": False, "palgate_enabled": True},
-                {"first_name": "Alice", "last_name": "Doe", "phone": "0504444444", "whatsapp_enabled": False, "palgate_enabled": True},
-                {"first_name": "Charlie", "last_name": "Doe", "phone": "0505555555", "whatsapp_enabled": False, "palgate_enabled": True},
-                {"first_name": "Eve", "last_name": "Doe", "phone": "0506666666", "whatsapp_enabled": False, "palgate_enabled": True},
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                    },
+                    {
+                        "first_name": "Bob",
+                        "last_name": "Doe",
+                        "phone": "0503333333",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                    },
+                    {
+                        "first_name": "Alice",
+                        "last_name": "Doe",
+                        "phone": "0504444444",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                    },
+                    {
+                        "first_name": "Charlie",
+                        "last_name": "Doe",
+                        "phone": "0505555555",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                    },
+                    {
+                        "first_name": "Eve",
+                        "last_name": "Doe",
+                        "phone": "0506666666",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -583,17 +694,26 @@ class TestFamilyMemberValidation:
     def test_family_member_invalid_name(self, client, mock_sdk):
         """Test validation fails for family member with invalid name."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {"first_name": "J", "last_name": "Doe", "phone": "0502222222", "whatsapp_enabled": True, "palgate_enabled": False},
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "J",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": False,
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -602,17 +722,26 @@ class TestFamilyMemberValidation:
     def test_family_member_invalid_phone(self, client, mock_sdk):
         """Test validation fails for family member with invalid phone."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {"first_name": "Jane", "last_name": "Doe", "phone": "123", "whatsapp_enabled": True, "palgate_enabled": False},
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "123",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": False,
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -621,24 +750,27 @@ class TestFamilyMemberValidation:
     def test_family_member_invalid_vehicle_plate(self, client, mock_sdk):
         """Test validation fails for family member with invalid vehicle plate."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {
-                    "first_name": "Jane",
-                    "last_name": "Doe",
-                    "phone": "0502222222",
-                    "whatsapp_enabled": False,
-                    "palgate_enabled": True,
-                    "vehicle_plate": "ABC123"  # Letters not allowed
-                },
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                        "vehicle_plate": "ABC123",  # Letters not allowed
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -648,24 +780,27 @@ class TestFamilyMemberValidation:
         """Test validation passes for family member with valid vehicle plate."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {
-                    "first_name": "Jane",
-                    "last_name": "Doe",
-                    "phone": "0502222222",
-                    "whatsapp_enabled": False,
-                    "palgate_enabled": True,
-                    "vehicle_plate": "12-345-67"
-                },
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                        "vehicle_plate": "12-345-67",
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -674,32 +809,35 @@ class TestFamilyMemberValidation:
         """Test validation passes for valid family members with both services enabled."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {
-                    "first_name": "Jane",
-                    "last_name": "Doe",
-                    "phone": "0502222222",
-                    "whatsapp_enabled": True,
-                    "palgate_enabled": True,
-                    "vehicle_plate": "12-345-67"
-                },
-                {
-                    "first_name": "Bob",
-                    "last_name": "Doe",
-                    "phone": "0503333333",
-                    "whatsapp_enabled": True,
-                    "palgate_enabled": True,
-                    "vehicle_plate": "98-765-43"
-                },
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": True,
+                        "vehicle_plate": "12-345-67",
+                    },
+                    {
+                        "first_name": "Bob",
+                        "last_name": "Doe",
+                        "phone": "0503333333",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": True,
+                        "vehicle_plate": "98-765-43",
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -708,24 +846,27 @@ class TestFamilyMemberValidation:
         """Test that empty vehicle plate is allowed."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {
-                    "first_name": "Jane",
-                    "last_name": "Doe",
-                    "phone": "0502222222",
-                    "whatsapp_enabled": False,
-                    "palgate_enabled": True,
-                    "vehicle_plate": ""  # Empty is allowed
-                },
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                        "vehicle_plate": "",  # Empty is allowed
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -737,20 +878,26 @@ class TestTenantReplacement:
     def test_existing_tenant_requires_confirmation(self, client, mock_sdk):
         """Test that existing tenant triggers confirmation requirement."""
         mock_sdk.get_tenant.return_value = TenantInfo(
-            building_number=11, apartment_number=1,
-            first_name="Existing", last_name="Tenant",
-            phone="0509999999", is_owner=True,
-            move_in_date=date(2023, 1, 1)
+            building_number=11,
+            apartment_number=1,
+            first_name="Existing",
+            last_name="Tenant",
+            phone="0509999999",
+            is_owner=True,
+            move_in_date=date(2023, 1, 1),
         )
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "replace_existing": False
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "replace_existing": False,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -761,23 +908,29 @@ class TestTenantReplacement:
     def test_replace_existing_tenant(self, client, mock_sdk):
         """Test that tenant can be replaced with confirmation."""
         mock_sdk.get_tenant.return_value = TenantInfo(
-            building_number=11, apartment_number=1,
-            first_name="Existing", last_name="Tenant",
-            phone="0509999999", is_owner=True,
-            move_in_date=date(2023, 1, 1)
+            building_number=11,
+            apartment_number=1,
+            first_name="Existing",
+            last_name="Tenant",
+            phone="0509999999",
+            is_owner=True,
+            move_in_date=date(2023, 1, 1),
         )
         mock_sdk.end_tenancy.return_value = {"ended": True}
         mock_sdk.create_tenant.return_value = {"success": True}
 
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "replace_existing": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "replace_existing": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -791,14 +944,17 @@ class TestMultipleValidationErrors:
     def test_multiple_field_errors(self, client, mock_sdk):
         """Test multiple validation errors returned together."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "J",  # Too short
-            "last_name": "D",  # Too short
-            "phone": "123",  # Too short
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "J",  # Too short
+                "last_name": "D",  # Too short
+                "phone": "123",  # Too short
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -810,19 +966,22 @@ class TestMultipleValidationErrors:
     def test_renter_with_all_invalid_fields(self, client, mock_sdk):
         """Test renter with all invalid fields returns all errors."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "J",  # Too short
-            "last_name": "D",  # Too short
-            "phone": "123",  # Too short
-            "is_owner": False,
-            "owner_info": {
-                "first_name": "X",  # Too short
-                "last_name": "Y",  # Too short
-                "phone": "456"  # Too short
-            }
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "J",  # Too short
+                "last_name": "D",  # Too short
+                "phone": "123",  # Too short
+                "is_owner": False,
+                "owner_info": {
+                    "first_name": "X",  # Too short
+                    "last_name": "Y",  # Too short
+                    "phone": "456",  # Too short
+                },
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -842,14 +1001,17 @@ class TestEdgeCases:
         """Test name at exact minimum length passes."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "Jo",  # Exactly 2 chars
-            "last_name": "Li",  # Exactly 2 chars
-            "phone": "050123456",  # Exactly 9 chars
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "Jo",  # Exactly 2 chars
+                "last_name": "Li",  # Exactly 2 chars
+                "phone": "050123456",  # Exactly 9 chars
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -858,14 +1020,17 @@ class TestEdgeCases:
         """Test phone at exact maximum length passes."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "123456789012345",  # Exactly 15 chars
-            "is_owner": True
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "123456789012345",  # Exactly 15 chars
+                "is_owner": True,
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -874,15 +1039,18 @@ class TestEdgeCases:
         """Test empty family members list is valid."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": []
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -891,19 +1059,34 @@ class TestEdgeCases:
         """Test family members at exact limits pass."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                # Exactly 2 WhatsApp (max)
-                {"first_name": "Jane", "last_name": "Doe", "phone": "0502222222", "whatsapp_enabled": True, "palgate_enabled": False},
-                {"first_name": "Bob", "last_name": "Doe", "phone": "0503333333", "whatsapp_enabled": True, "palgate_enabled": False},
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    # Exactly 2 WhatsApp (max)
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": False,
+                    },
+                    {
+                        "first_name": "Bob",
+                        "last_name": "Doe",
+                        "phone": "0503333333",
+                        "whatsapp_enabled": True,
+                        "palgate_enabled": False,
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -912,24 +1095,27 @@ class TestEdgeCases:
         """Test vehicle plate at exact max length passes."""
         mock_sdk.get_tenant.return_value = None
         mock_sdk.create_tenant.return_value = {"success": True}
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {
-                    "first_name": "Jane",
-                    "last_name": "Doe",
-                    "phone": "0502222222",
-                    "whatsapp_enabled": False,
-                    "palgate_enabled": True,
-                    "vehicle_plate": "12-345-678"  # Exactly 10 chars
-                },
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                        "vehicle_plate": "12-345-678",  # Exactly 10 chars
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -937,24 +1123,27 @@ class TestEdgeCases:
     def test_vehicle_plate_over_max_length(self, client, mock_sdk):
         """Test vehicle plate over max length fails."""
         mock_sdk.get_tenant.return_value = None
-        response = client.post("/api/tenants", json={
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567",
-            "is_owner": True,
-            "family_members": [
-                {
-                    "first_name": "Jane",
-                    "last_name": "Doe",
-                    "phone": "0502222222",
-                    "whatsapp_enabled": False,
-                    "palgate_enabled": True,
-                    "vehicle_plate": "12-345-67890"  # 12 chars, over limit
-                },
-            ]
-        })
+        response = client.post(
+            "/api/tenants",
+            json={
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+                "family_members": [
+                    {
+                        "first_name": "Jane",
+                        "last_name": "Doe",
+                        "phone": "0502222222",
+                        "whatsapp_enabled": False,
+                        "palgate_enabled": True,
+                        "vehicle_plate": "12-345-67890",  # 12 chars, over limit
+                    },
+                ],
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is False
@@ -994,7 +1183,14 @@ class TestAIQuery:
         mock_agent.process_custom_query.return_value = mock_result
 
         mock_sdk.get_all_tenants.return_value = [
-            {"building_number": 11, "apartment_number": 1, "first_name": "John", "last_name": "Doe", "phone": "0501234567", "is_owner": True}
+            {
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+                "is_owner": True,
+            }
         ]
         mock_sdk.get_buildings.return_value = [BuildingInfo(number=11, total_apartments=17)]
 

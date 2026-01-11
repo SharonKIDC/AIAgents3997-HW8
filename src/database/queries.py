@@ -33,6 +33,7 @@ class TenantQueries:
     def get_all_tenants(self, building: int = None) -> List[Tenant]:
         """Get all active tenants, optionally filtered by building."""
         from src.database.excel_manager import ExcelManager
+
         manager = ExcelManager(self._db_path)
         workbook = self._load_workbook()
         worksheet = workbook[self.TENANTS_SHEET]
@@ -46,6 +47,7 @@ class TenantQueries:
     def get_tenant(self, building: int, apartment: int) -> Optional[Tenant]:
         """Get active tenant for a specific apartment."""
         from src.database.excel_manager import ExcelManager
+
         manager = ExcelManager(self._db_path)
         return manager.get_tenant(building, apartment)
 
@@ -62,7 +64,7 @@ class TenantQueries:
             "total_apartments": total,
             "occupied": occupied,
             "vacant": total - occupied,
-            "occupancy_rate": round(occupied / total * 100, 1) if total > 0 else 0
+            "occupancy_rate": round(occupied / total * 100, 1) if total > 0 else 0,
         }
 
     def get_all_buildings_occupancy(self) -> List[dict]:
@@ -93,19 +95,23 @@ class TenantQueries:
         contacts = []
         for tenant in tenants:
             if tenant.whatsapp_group_enabled:
-                contacts.append({
-                    "name": tenant.full_name,
-                    "phone": tenant.phone,
-                    "building": tenant.building_number,
-                    "apartment": tenant.apartment_number
-                })
-                for member in tenant.whatsapp_members:
-                    contacts.append({
-                        "name": f"{member.first_name} {member.last_name}",
-                        "phone": member.phone,
+                contacts.append(
+                    {
+                        "name": tenant.full_name,
+                        "phone": tenant.phone,
                         "building": tenant.building_number,
-                        "apartment": tenant.apartment_number
-                    })
+                        "apartment": tenant.apartment_number,
+                    }
+                )
+                for member in tenant.whatsapp_members:
+                    contacts.append(
+                        {
+                            "name": f"{member.first_name} {member.last_name}",
+                            "phone": member.phone,
+                            "building": tenant.building_number,
+                            "apartment": tenant.apartment_number,
+                        }
+                    )
         return contacts
 
     def get_parking_authorizations(self, building: int = None) -> List[dict]:
@@ -114,19 +120,23 @@ class TenantQueries:
         authorizations = []
         for tenant in tenants:
             if tenant.palgate_access_enabled:
-                authorizations.append({
-                    "name": tenant.full_name,
-                    "phone": tenant.phone,
-                    "building": tenant.building_number,
-                    "apartment": tenant.apartment_number,
-                    "slots": [tenant.parking_slot_1, tenant.parking_slot_2]
-                })
-                for auth in tenant.parking_authorizations:
-                    authorizations.append({
-                        "name": f"{auth.first_name} {auth.last_name}",
-                        "phone": auth.phone,
+                authorizations.append(
+                    {
+                        "name": tenant.full_name,
+                        "phone": tenant.phone,
                         "building": tenant.building_number,
                         "apartment": tenant.apartment_number,
-                        "slots": []
-                    })
+                        "slots": [tenant.parking_slot_1, tenant.parking_slot_2],
+                    }
+                )
+                for auth in tenant.parking_authorizations:
+                    authorizations.append(
+                        {
+                            "name": f"{auth.first_name} {auth.last_name}",
+                            "phone": auth.phone,
+                            "building": tenant.building_number,
+                            "apartment": tenant.apartment_number,
+                            "slots": [],
+                        }
+                    )
         return authorizations

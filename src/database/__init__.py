@@ -5,8 +5,12 @@ for the residential complex tenant management system.
 """
 
 from src.database.models import (
-    Building, Tenant, TenantHistory, OwnerInfo,
-    WhatsAppMember, ParkingAuthorization
+    Building,
+    Tenant,
+    TenantHistory,
+    OwnerInfo,
+    WhatsAppMember,
+    ParkingAuthorization,
 )
 from src.database.excel_manager import ExcelManager
 from src.database.excel_operations import ExcelOperations

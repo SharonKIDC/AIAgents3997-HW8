@@ -45,19 +45,18 @@ class ExcelOperations:
     def create_tenant(self, tenant: Tenant) -> Tenant:
         """Create a new tenant record."""
         self._validator.validate_building_number(tenant.building_number)
-        self._validator.validate_apartment_number(
-            tenant.building_number, tenant.apartment_number
-        )
+        self._validator.validate_apartment_number(tenant.building_number, tenant.apartment_number)
         wb = self._load_workbook()
         ws = wb[self.TENANTS_SHEET]
         for row in range(2, ws.max_row + 1):
-            if (ws.cell(row, 1).value == tenant.building_number and
-                ws.cell(row, 2).value == tenant.apartment_number and
-                not ws.cell(row, 16).value):
+            if (
+                ws.cell(row, 1).value == tenant.building_number
+                and ws.cell(row, 2).value == tenant.apartment_number
+                and not ws.cell(row, 16).value
+            ):
                 raise ValidationError(
                     "Active tenant already exists for this apartment",
-                    {"building": tenant.building_number,
-                     "apartment": tenant.apartment_number}
+                    {"building": tenant.building_number, "apartment": tenant.apartment_number},
                 )
         row = ws.max_row + 1
         self._write_tenant_row(ws, row, tenant)
@@ -69,28 +68,29 @@ class ExcelOperations:
         wb = self._load_workbook()
         ws = wb[self.TENANTS_SHEET]
         for row in range(2, ws.max_row + 1):
-            if (ws.cell(row, 1).value == tenant.building_number and
-                ws.cell(row, 2).value == tenant.apartment_number and
-                not ws.cell(row, 16).value):
+            if (
+                ws.cell(row, 1).value == tenant.building_number
+                and ws.cell(row, 2).value == tenant.apartment_number
+                and not ws.cell(row, 16).value
+            ):
                 self._write_tenant_row(ws, row, tenant)
                 self._save_workbook(wb)
                 return tenant
         raise NotFoundError(
             "Tenant not found",
-            {"building": tenant.building_number,
-             "apartment": tenant.apartment_number}
+            {"building": tenant.building_number, "apartment": tenant.apartment_number},
         )
 
-    def end_tenancy(
-        self, building: int, apartment: int, move_out: date
-    ) -> TenantHistory:
+    def end_tenancy(self, building: int, apartment: int, move_out: date) -> TenantHistory:
         """End tenancy and move record to history."""
         wb = self._load_workbook()
         ws = wb[self.TENANTS_SHEET]
         for row in range(2, ws.max_row + 1):
-            if (ws.cell(row, 1).value == building and
-                ws.cell(row, 2).value == apartment and
-                not ws.cell(row, 16).value):
+            if (
+                ws.cell(row, 1).value == building
+                and ws.cell(row, 2).value == apartment
+                and not ws.cell(row, 16).value
+            ):
                 ws.cell(row, 16).value = move_out.isoformat()
                 history = self._create_history_record(ws, row, move_out)
                 ws_history = wb[self.HISTORY_SHEET]
@@ -114,16 +114,10 @@ class ExcelOperations:
             ws.cell(row, 10).value = tenant.owner_info.first_name
             ws.cell(row, 11).value = tenant.owner_info.last_name
             ws.cell(row, 12).value = tenant.owner_info.phone
-        ws.cell(row, 13).value = json.dumps(
-            [m.model_dump() for m in tenant.whatsapp_members]
-        )
-        ws.cell(row, 14).value = json.dumps(
-            [p.model_dump() for p in tenant.parking_authorizations]
-        )
+        ws.cell(row, 13).value = json.dumps([m.model_dump() for m in tenant.whatsapp_members])
+        ws.cell(row, 14).value = json.dumps([p.model_dump() for p in tenant.parking_authorizations])
         ws.cell(row, 15).value = tenant.move_in_date.isoformat()
-        ws.cell(row, 16).value = (
-            tenant.move_out_date.isoformat() if tenant.move_out_date else None
-        )
+        ws.cell(row, 16).value = tenant.move_out_date.isoformat() if tenant.move_out_date else None
         ws.cell(row, 17).value = tenant.palgate_access_enabled
         ws.cell(row, 18).value = tenant.whatsapp_group_enabled
 
@@ -140,7 +134,7 @@ class ExcelOperations:
             was_owner=bool(ws.cell(row, 9).value),
             owner_first_name=ws.cell(row, 10).value,
             owner_last_name=ws.cell(row, 11).value,
-            owner_phone=ws.cell(row, 12).value
+            owner_phone=ws.cell(row, 12).value,
         )
 
     def _write_history_row(self, ws, history: TenantHistory) -> None:
@@ -161,11 +155,13 @@ class ExcelOperations:
     def get_all_tenants(self, building: int = None) -> List[Tenant]:
         """Get all active tenants, optionally filtered by building."""
         from src.database.queries import TenantQueries
+
         queries = TenantQueries(self._db_path)
         return queries.get_all_tenants(building)
 
     def get_tenant_history(self, building: int, apartment: int) -> List[TenantHistory]:
         """Get history of all tenants for an apartment."""
         from src.database.history_manager import HistoryManager
+
         history_mgr = HistoryManager(self._db_path)
         return history_mgr.get_apartment_history(building, apartment)

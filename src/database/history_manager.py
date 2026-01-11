@@ -61,16 +61,16 @@ class HistoryManager:
         worksheet.cell(row, 10).value = history.owner_last_name
         worksheet.cell(row, 11).value = history.owner_phone
 
-    def get_apartment_history(
-        self, building: int, apartment: int
-    ) -> List[TenantHistory]:
+    def get_apartment_history(self, building: int, apartment: int) -> List[TenantHistory]:
         """Get history of all tenants for an apartment."""
         workbook = self._load_workbook()
         worksheet = workbook[self.HISTORY_SHEET]
         history = []
         for row in range(2, worksheet.max_row + 1):
-            if (worksheet.cell(row, 1).value == building and
-                worksheet.cell(row, 2).value == apartment):
+            if (
+                worksheet.cell(row, 1).value == building
+                and worksheet.cell(row, 2).value == apartment
+            ):
                 history.append(self._row_to_history(worksheet, row))
         return sorted(history, key=lambda h: h.move_in_date, reverse=True)
 
@@ -97,5 +97,5 @@ class HistoryManager:
             was_owner=bool(worksheet.cell(row, 8).value),
             owner_first_name=worksheet.cell(row, 9).value,
             owner_last_name=worksheet.cell(row, 10).value,
-            owner_phone=worksheet.cell(row, 11).value
+            owner_phone=worksheet.cell(row, 11).value,
         )

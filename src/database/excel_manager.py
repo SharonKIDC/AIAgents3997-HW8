@@ -27,17 +27,38 @@ class ExcelManager:
     BUILDINGS_SHEET = "Buildings"
 
     TENANT_HEADERS = [
-        "building_number", "apartment_number", "first_name", "last_name",
-        "phone", "storage_number", "parking_slot_1", "parking_slot_2",
-        "is_owner", "owner_first_name", "owner_last_name", "owner_phone",
-        "whatsapp_members", "parking_authorizations", "move_in_date",
-        "move_out_date", "palgate_access", "whatsapp_group"
+        "building_number",
+        "apartment_number",
+        "first_name",
+        "last_name",
+        "phone",
+        "storage_number",
+        "parking_slot_1",
+        "parking_slot_2",
+        "is_owner",
+        "owner_first_name",
+        "owner_last_name",
+        "owner_phone",
+        "whatsapp_members",
+        "parking_authorizations",
+        "move_in_date",
+        "move_out_date",
+        "palgate_access",
+        "whatsapp_group",
     ]
 
     HISTORY_HEADERS = [
-        "building_number", "apartment_number", "first_name", "last_name",
-        "phone", "move_in_date", "move_out_date", "was_owner",
-        "owner_first_name", "owner_last_name", "owner_phone"
+        "building_number",
+        "apartment_number",
+        "first_name",
+        "last_name",
+        "phone",
+        "move_in_date",
+        "move_out_date",
+        "was_owner",
+        "owner_first_name",
+        "owner_last_name",
+        "owner_phone",
     ]
 
     def __init__(self, db_path: str = None):
@@ -106,21 +127,24 @@ class ExcelManager:
         wb = self._load_workbook()
         ws = wb[self.TENANTS_SHEET]
         for row in range(2, ws.max_row + 1):
-            if (ws.cell(row, 1).value == building and
-                ws.cell(row, 2).value == apartment and
-                not ws.cell(row, 16).value):
+            if (
+                ws.cell(row, 1).value == building
+                and ws.cell(row, 2).value == apartment
+                and not ws.cell(row, 16).value
+            ):
                 return self._row_to_tenant(ws, row)
         return None
 
     def _row_to_tenant(self, ws: Worksheet, row: int) -> Tenant:
         """Convert worksheet row to Tenant model."""
         from src.database.models import OwnerInfo
+
         owner_info = None
         if not ws.cell(row, 9).value:
             owner_info = OwnerInfo(
                 first_name=ws.cell(row, 10).value or "",
                 last_name=ws.cell(row, 11).value or "",
-                phone=ws.cell(row, 12).value or ""
+                phone=ws.cell(row, 12).value or "",
             )
         return Tenant(
             building_number=ws.cell(row, 1).value,
@@ -138,5 +162,5 @@ class ExcelManager:
             move_in_date=self._str_to_date(ws.cell(row, 15).value),
             move_out_date=self._str_to_date(ws.cell(row, 16).value),
             palgate_access_enabled=bool(ws.cell(row, 17).value),
-            whatsapp_group_enabled=bool(ws.cell(row, 18).value)
+            whatsapp_group_enabled=bool(ws.cell(row, 18).value),
         )

@@ -20,7 +20,7 @@ def create_web_app() -> FastAPI:
     app = FastAPI(
         title="Tenant Management Web UI",
         description="Web interface for residential complex tenant management",
-        version="1.0.0"
+        version="1.0.0",
     )
     if config.get("web_ui.enable_cors", True):
         origins = config.get("web_ui.allowed_origins", ["http://localhost:3000"])
@@ -29,7 +29,7 @@ def create_web_app() -> FastAPI:
             allow_origins=origins,
             allow_credentials=True,
             allow_methods=["*"],
-            allow_headers=["*"]
+            allow_headers=["*"],
         )
     app.include_router(router)
 

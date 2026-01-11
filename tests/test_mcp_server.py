@@ -53,40 +53,38 @@ class TestTenantTools:
     def test_create_tenant(self, temp_db):
         """Test creating a tenant via tool."""
         tools = TenantTools(db_path=temp_db)
-        result = tools.create_tenant({
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567"
-        })
+        result = tools.create_tenant(
+            {
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+            }
+        )
         assert result["success"] is True
         assert result["tenant"]["first_name"] == "John"
 
     def test_get_tenant(self, temp_db):
         """Test getting a tenant via tool."""
         tools = TenantTools(db_path=temp_db)
-        tools.create_tenant({
-            "building_number": 11,
-            "apartment_number": 1,
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "0501234567"
-        })
-        result = tools.get_tenant({
-            "building_number": 11,
-            "apartment_number": 1
-        })
+        tools.create_tenant(
+            {
+                "building_number": 11,
+                "apartment_number": 1,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "0501234567",
+            }
+        )
+        result = tools.get_tenant({"building_number": 11, "apartment_number": 1})
         assert result["success"] is True
         assert result["tenant"]["first_name"] == "John"
 
     def test_get_tenant_not_found(self, temp_db):
         """Test getting non-existent tenant."""
         tools = TenantTools(db_path=temp_db)
-        result = tools.get_tenant({
-            "building_number": 11,
-            "apartment_number": 99
-        })
+        result = tools.get_tenant({"building_number": 11, "apartment_number": 99})
         assert result["success"] is True
         assert result["tenant"] is None
 
@@ -191,34 +189,33 @@ class TestMCPServerAPI:
 
     def test_invoke_create_tenant(self, test_client):
         """Test invoking create_tenant tool via API."""
-        response = test_client.post("/tools/invoke", json={
-            "name": "create_tenant",
-            "arguments": {
-                "building_number": 11,
-                "apartment_number": 1,
-                "first_name": "Jane",
-                "last_name": "Smith",
-                "phone": "0509876543"
-            }
-        })
+        response = test_client.post(
+            "/tools/invoke",
+            json={
+                "name": "create_tenant",
+                "arguments": {
+                    "building_number": 11,
+                    "apartment_number": 1,
+                    "first_name": "Jane",
+                    "last_name": "Smith",
+                    "phone": "0509876543",
+                },
+            },
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
 
     def test_invoke_unknown_tool(self, test_client):
         """Test invoking unknown tool."""
-        response = test_client.post("/tools/invoke", json={
-            "name": "unknown_tool",
-            "arguments": {}
-        })
+        response = test_client.post("/tools/invoke", json={"name": "unknown_tool", "arguments": {}})
         assert response.status_code == 404
 
     def test_generate_prompt(self, test_client):
         """Test generating a prompt."""
-        response = test_client.post("/prompts/generate", json={
-            "name": "occupancy_report",
-            "arguments": {}
-        })
+        response = test_client.post(
+            "/prompts/generate", json={"name": "occupancy_report", "arguments": {}}
+        )
         assert response.status_code == 200
         data = response.json()
         assert "messages" in data

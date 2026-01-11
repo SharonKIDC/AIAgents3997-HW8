@@ -28,20 +28,19 @@ def _get_validation_config() -> Dict[str, Any]:
             "pattern": config.get("tenant_registration.phone.pattern", r"^[0-9\-\+]+$"),
             "pattern_description": config.get(
                 "tenant_registration.phone.pattern_description",
-                "Phone must contain only digits, dashes, and plus sign"
-            )
+                "Phone must contain only digits, dashes, and plus sign",
+            ),
         },
         "name": {
             "min_length": config.get("tenant_registration.name.min_length", 2),
             "max_length": config.get("tenant_registration.name.max_length", 50),
             "pattern": config.get(
-                "tenant_registration.name.pattern",
-                r"^[a-zA-Z\u0590-\u05FF\s\-']+$"
+                "tenant_registration.name.pattern", r"^[a-zA-Z\u0590-\u05FF\s\-']+$"
             ),
             "pattern_description": config.get(
                 "tenant_registration.name.pattern_description",
-                "Name must contain only letters, spaces, hyphens, and apostrophes"
-            )
+                "Name must contain only letters, spaces, hyphens, and apostrophes",
+            ),
         },
         "family_members": {
             "max_whatsapp_members": config.get(
@@ -52,19 +51,16 @@ def _get_validation_config() -> Dict[str, Any]:
             ),
             "main_tenant_always_included": config.get(
                 "tenant_registration.family_members.main_tenant_always_included", True
-            )
+            ),
         },
         "vehicle_plate": {
             "max_length": config.get("tenant_registration.vehicle_plate.max_length", 10),
-            "pattern": config.get(
-                "tenant_registration.vehicle_plate.pattern",
-                r"^[0-9\-]+$"
-            ),
+            "pattern": config.get("tenant_registration.vehicle_plate.pattern", r"^[0-9\-]+$"),
             "pattern_description": config.get(
                 "tenant_registration.vehicle_plate.pattern_description",
-                "Vehicle plate must contain only digits and dashes"
-            )
-        }
+                "Vehicle plate must contain only digits and dashes",
+            ),
+        },
     }
 
 
@@ -202,15 +198,11 @@ def _validate_tenant_data(tenant: TenantCreate) -> Dict[str, List[str]]:
             if owner_fn_errors:
                 errors["owner_first_name"] = owner_fn_errors
 
-            owner_ln_errors = _validate_name(
-                tenant.owner_info.last_name, "Owner last name", config
-            )
+            owner_ln_errors = _validate_name(tenant.owner_info.last_name, "Owner last name", config)
             if owner_ln_errors:
                 errors["owner_last_name"] = owner_ln_errors
 
-            owner_phone_errors = _validate_phone(
-                tenant.owner_info.phone, "Owner phone", config
-            )
+            owner_phone_errors = _validate_phone(tenant.owner_info.phone, "Owner phone", config)
             if owner_phone_errors:
                 errors["owner_phone"] = owner_phone_errors
 
@@ -281,7 +273,7 @@ async def get_building(building_number: int):
             "total_apartments": building.total_apartments,
             "occupied": building.occupied,
             "vacant": building.vacant,
-            "occupancy_rate": building.occupancy_rate
+            "occupancy_rate": building.occupancy_rate,
         }
 
 
@@ -309,7 +301,7 @@ async def get_tenant(building: int, apartment: int):
             "full_name": tenant.full_name,
             "phone": tenant.phone,
             "is_owner": tenant.is_owner,
-            "move_in_date": tenant.move_in_date.isoformat() if tenant.move_in_date else None
+            "move_in_date": tenant.move_in_date.isoformat() if tenant.move_in_date else None,
         }
 
 
@@ -322,7 +314,7 @@ async def create_tenant(tenant: TenantCreate):
         return {
             "success": False,
             "validation_errors": validation_errors,
-            "message": "Please fix the validation errors"
+            "message": "Please fix the validation errors",
         }
 
     try:
@@ -341,18 +333,18 @@ async def create_tenant(tenant: TenantCreate):
                         "first_name": existing.first_name,
                         "last_name": existing.last_name,
                         "phone": existing.phone,
-                        "move_in_date": existing.move_in_date.isoformat() if existing.move_in_date else None
+                        "move_in_date": (
+                            existing.move_in_date.isoformat() if existing.move_in_date else None
+                        ),
                     },
-                    "message": f"Apartment already occupied by {existing.full_name}"
+                    "message": f"Apartment already occupied by {existing.full_name}",
                 }
 
             # If replacing, end the existing tenancy first
             if existing and tenant.replace_existing:
                 move_out = move_in - timedelta(days=1)
                 sdk.end_tenancy(
-                    tenant.building_number,
-                    tenant.apartment_number,
-                    move_out_date=move_out
+                    tenant.building_number, tenant.apartment_number, move_out_date=move_out
                 )
 
             # Build owner_info dict if provided
@@ -361,22 +353,24 @@ async def create_tenant(tenant: TenantCreate):
                 owner_info = {
                     "first_name": tenant.owner_info.first_name,
                     "last_name": tenant.owner_info.last_name,
-                    "phone": tenant.owner_info.phone
+                    "phone": tenant.owner_info.phone,
                 }
 
             # Build WhatsApp and PalGate member lists from family members
             whatsapp_members = [
                 {"first_name": m.first_name, "last_name": m.last_name, "phone": m.phone}
-                for m in tenant.family_members if m.whatsapp_enabled
+                for m in tenant.family_members
+                if m.whatsapp_enabled
             ]
             palgate_members = [
                 {
                     "first_name": m.first_name,
                     "last_name": m.last_name,
                     "phone": m.phone,
-                    "vehicle_plate": m.vehicle_plate
+                    "vehicle_plate": m.vehicle_plate,
                 }
-                for m in tenant.family_members if m.palgate_enabled
+                for m in tenant.family_members
+                if m.palgate_enabled
             ]
 
             result = sdk.create_tenant(
@@ -392,20 +386,16 @@ async def create_tenant(tenant: TenantCreate):
                 parking_slot_2=tenant.parking_slot_2,
                 owner_info=owner_info,
                 whatsapp_members=whatsapp_members,
-                palgate_members=palgate_members
+                palgate_members=palgate_members,
             )
             return {"success": True, "data": result}
     except ValidationError as e:
-        return {
-            "success": False,
-            "validation_errors": {"_general": [str(e)]},
-            "message": str(e)
-        }
+        return {"success": False, "validation_errors": {"_general": [str(e)]}, "message": str(e)}
     except Exception as e:
         return {
             "success": False,
             "validation_errors": {"_general": [str(e)]},
-            "message": "An unexpected error occurred"
+            "message": "An unexpected error occurred",
         }
 
 
@@ -464,8 +454,7 @@ async def get_occupancy_report(building: Optional[int] = Query(None)):
 
 @router.get("/reports/tenant-list")
 async def get_tenant_list_report(
-    building: Optional[int] = Query(None),
-    include_contacts: bool = Query(False)
+    building: Optional[int] = Query(None), include_contacts: bool = Query(False)
 ):
     """Generate tenant list report prompt for AI."""
     with _get_sdk() as sdk:
@@ -494,10 +483,7 @@ async def process_ai_query(request: AIQueryRequest):
     from src.ai_agent.reporter import ReportAgent
 
     if not request.query or len(request.query.strip()) < 3:
-        return {
-            "success": False,
-            "error": "Query must be at least 3 characters"
-        }
+        return {"success": False, "error": "Query must be at least 3 characters"}
 
     try:
         with ReportAgent() as agent:
@@ -513,20 +499,11 @@ async def process_ai_query(request: AIQueryRequest):
             context = _build_query_context(tenants, buildings, request.building)
 
             # Process the query with context
-            result = agent.process_custom_query(
-                f"{request.query}\n\nContext:\n{context}"
-            )
+            result = agent.process_custom_query(f"{request.query}\n\nContext:\n{context}")
 
-            return {
-                "success": True,
-                "response": result.content,
-                "metadata": result.metadata
-            }
+            return {"success": True, "response": result.content, "metadata": result.metadata}
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
 
 def _build_query_context(tenants: List, buildings: List, building_filter: Optional[int]) -> str:

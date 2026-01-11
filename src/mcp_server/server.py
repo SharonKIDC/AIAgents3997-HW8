@@ -40,7 +40,7 @@ def _configure_cors(application: FastAPI) -> None:
             allow_origins=origins,
             allow_credentials=True,
             allow_methods=["*"],
-            allow_headers=["*"]
+            allow_headers=["*"],
         )
 
 
@@ -49,7 +49,7 @@ def create_app(db_path: str = None) -> FastAPI:
     application = FastAPI(
         title="Tenant Management MCP Server",
         description="MCP Server for residential complex tenant management",
-        version="1.0.0"
+        version="1.0.0",
     )
     _configure_cors(application)
     tools = TenantTools(db_path)

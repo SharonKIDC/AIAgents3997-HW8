@@ -21,7 +21,7 @@ class TestTenantInfo:
             first_name="John",
             last_name="Doe",
             phone="0501234567",
-            is_owner=True
+            is_owner=True,
         )
         assert tenant.building_number == 11
         assert tenant.full_name == "John Doe"
@@ -37,7 +37,7 @@ class TestTenantInfo:
             is_owner=False,
             move_in_date=date(2024, 1, 15),
             storage_number=5,
-            parking_slot_1=10
+            parking_slot_1=10,
         )
         assert tenant.move_in_date == date(2024, 1, 15)
         assert tenant.parking_slot_1 == 10
@@ -49,11 +49,7 @@ class TestBuildingInfo:
     def test_building_info_creation(self):
         """Test building info creation."""
         building = BuildingInfo(
-            number=11,
-            total_apartments=17,
-            occupied=15,
-            vacant=2,
-            occupancy_rate=88.2
+            number=11, total_apartments=17, occupied=15, vacant=2, occupancy_rate=88.2
         )
         assert building.number == 11
         assert building.vacant == 2
@@ -83,13 +79,10 @@ class TestTenantSDK:
     def test_create_tenant(self, sdk, mock_client):
         """Test tenant creation."""
         mock_client.invoke_tool.return_value = MCPResponse(
-            success=True,
-            data={"building_number": 11, "apartment_number": 1}
+            success=True, data={"building_number": 11, "apartment_number": 1}
         )
         result = sdk.create_tenant(
-            building=11, apartment=1,
-            first_name="John", last_name="Doe",
-            phone="0501234567"
+            building=11, apartment=1, first_name="John", last_name="Doe", phone="0501234567"
         )
         assert result["building_number"] == 11
         mock_client.invoke_tool.assert_called_once()
@@ -101,9 +94,7 @@ class TestTenantSDK:
         )
         with pytest.raises(ValidationError):
             sdk.create_tenant(
-                building=11, apartment=1,
-                first_name="John", last_name="Doe",
-                phone="0501234567"
+                building=11, apartment=1, first_name="John", last_name="Doe", phone="0501234567"
             )
 
     def test_get_tenant(self, sdk, mock_client):
@@ -117,8 +108,8 @@ class TestTenantSDK:
                 "last_name": "Doe",
                 "phone": "0501234567",
                 "is_owner": True,
-                "move_in_date": "2024-01-15"
-            }
+                "move_in_date": "2024-01-15",
+            },
         )
         tenant = sdk.get_tenant(11, 1)
         assert tenant is not None
@@ -133,17 +124,13 @@ class TestTenantSDK:
 
     def test_update_tenant(self, sdk, mock_client):
         """Test tenant update."""
-        mock_client.invoke_tool.return_value = MCPResponse(
-            success=True, data={"updated": True}
-        )
+        mock_client.invoke_tool.return_value = MCPResponse(success=True, data={"updated": True})
         result = sdk.update_tenant(11, 1, phone="0509999999")
         assert result["updated"] is True
 
     def test_end_tenancy(self, sdk, mock_client):
         """Test ending tenancy."""
-        mock_client.invoke_tool.return_value = MCPResponse(
-            success=True, data={"ended": True}
-        )
+        mock_client.invoke_tool.return_value = MCPResponse(success=True, data={"ended": True})
         result = sdk.end_tenancy(11, 1)
         assert result["ended"] is True
 
@@ -151,10 +138,12 @@ class TestTenantSDK:
         """Test getting buildings."""
         mock_client.get_resource.return_value = MCPResponse(
             success=True,
-            data={"buildings": [
-                {"number": 11, "total_apartments": 17},
-                {"number": 13, "total_apartments": 24}
-            ]}
+            data={
+                "buildings": [
+                    {"number": 11, "total_apartments": 17},
+                    {"number": 13, "total_apartments": 24},
+                ]
+            },
         )
         buildings = sdk.get_buildings()
         assert len(buildings) == 2
@@ -178,9 +167,7 @@ class TestTenantSDK:
 
     def test_get_occupancy_report(self, sdk, mock_client):
         """Test getting occupancy report prompt."""
-        mock_client.generate_prompt.return_value = MCPResponse(
-            success=True, data={"messages": []}
-        )
+        mock_client.generate_prompt.return_value = MCPResponse(success=True, data={"messages": []})
         response = sdk.get_occupancy_report(11)
         assert response.success is True
 

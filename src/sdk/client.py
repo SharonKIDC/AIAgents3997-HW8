@@ -59,7 +59,7 @@ class TenantSDK:
         phone: str,
         is_owner: bool = True,
         move_in_date: date = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Create a new tenant."""
         params = {
@@ -69,7 +69,7 @@ class TenantSDK:
             "last_name": last_name,
             "phone": phone,
             "is_owner": is_owner,
-            "move_in_date": (move_in_date or date.today()).isoformat()
+            "move_in_date": (move_in_date or date.today()).isoformat(),
         }
         params.update(kwargs)
         response = self._client.invoke_tool("create_tenant", params)
@@ -80,8 +80,7 @@ class TenantSDK:
     def get_tenant(self, building: int, apartment: int) -> Optional[TenantInfo]:
         """Get tenant information for an apartment."""
         response = self._client.invoke_tool(
-            "get_tenant",
-            {"building_number": building, "apartment_number": apartment}
+            "get_tenant", {"building_number": building, "apartment_number": apartment}
         )
         if response.is_error() or not response.data:
             return None
@@ -93,19 +92,17 @@ class TenantSDK:
             last_name=data["last_name"],
             phone=data["phone"],
             is_owner=data["is_owner"],
-            move_in_date=date.fromisoformat(data["move_in_date"]) if data.get("move_in_date") else None,  # noqa: E501
+            move_in_date=(
+                date.fromisoformat(data["move_in_date"]) if data.get("move_in_date") else None
+            ),  # noqa: E501
             storage_number=data.get("storage_number"),
             parking_slot_1=data.get("parking_slot_1"),
-            parking_slot_2=data.get("parking_slot_2")
+            parking_slot_2=data.get("parking_slot_2"),
         )
 
     def update_tenant(self, building: int, apartment: int, **updates) -> Dict[str, Any]:
         """Update tenant information."""
-        params = {
-            "building_number": building,
-            "apartment_number": apartment,
-            **updates
-        }
+        params = {"building_number": building, "apartment_number": apartment, **updates}
         response = self._client.invoke_tool("update_tenant", params)
         if response.is_error():
             raise ValidationError(response.error or "Failed to update tenant")
@@ -118,7 +115,7 @@ class TenantSDK:
         params = {
             "building_number": building,
             "apartment_number": apartment,
-            "move_out_date": (move_out_date or date.today()).isoformat()
+            "move_out_date": (move_out_date or date.today()).isoformat(),
         }
         response = self._client.invoke_tool("end_tenancy", params)
         if response.is_error():
@@ -132,10 +129,7 @@ class TenantSDK:
             return []
         buildings = response.data.get("buildings", [])
         return [
-            BuildingInfo(
-                number=b["number"],
-                total_apartments=b["total_apartments"]
-            )
+            BuildingInfo(number=b["number"], total_apartments=b["total_apartments"])
             for b in buildings
         ]
 
@@ -150,7 +144,7 @@ class TenantSDK:
             total_apartments=data["total_apartments"],
             occupied=data.get("occupied", 0),
             vacant=data.get("vacant", 0),
-            occupancy_rate=data.get("occupancy_rate", 0.0)
+            occupancy_rate=data.get("occupancy_rate", 0.0),
         )
 
     def get_all_tenants(self, building: int = None) -> List[Dict[str, Any]]:

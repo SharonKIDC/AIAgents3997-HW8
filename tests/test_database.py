@@ -10,9 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from src.database.models import (
-    Building, Tenant, TenantHistory, OwnerInfo
-)
+from src.database.models import Building, Tenant, TenantHistory, OwnerInfo
 from src.database.validators import DataValidator
 from src.database.excel_manager import ExcelManager
 from src.database.excel_operations import ExcelOperations
@@ -68,7 +66,7 @@ class TestTenant:
             first_name="Jane",
             last_name="Smith",
             phone="0509876543",
-            is_owner=True
+            is_owner=True,
         )
         assert tenant.full_name == "Jane Smith"
         assert tenant.is_active is True
@@ -83,7 +81,7 @@ class TestTenant:
             last_name="Smith",
             phone="0509876543",
             is_owner=False,
-            owner_info=owner
+            owner_info=owner,
         )
         assert tenant.is_owner is False
         assert tenant.owner_info.full_name == "John Doe"
@@ -96,7 +94,7 @@ class TestTenant:
             first_name="Jane",
             last_name="Smith",
             phone="0509876543",
-            move_out_date=date(2025, 1, 1)
+            move_out_date=date(2025, 1, 1),
         )
         assert tenant.is_active is False
 
@@ -114,7 +112,7 @@ class TestTenantHistory:
             phone="0509876543",
             move_in_date=date(2024, 1, 1),
             move_out_date=date(2024, 12, 31),
-            was_owner=True
+            was_owner=True,
         )
         assert history.tenancy_duration_days == 365
 
@@ -181,7 +179,7 @@ class TestDataValidator:
             "first_name": "Jane",
             "last_name": "Smith",
             "phone": "0509876543",
-            "is_owner": True
+            "is_owner": True,
         }
         valid, errors = validator.validate_tenant_data(data)
         assert valid is True
@@ -237,7 +235,7 @@ class TestExcelOperations:
             apartment_number=1,
             first_name="Jane",
             last_name="Smith",
-            phone="0509876543"
+            phone="0509876543",
         )
         created = ops.create_tenant(tenant)
         assert created.first_name == "Jane"
@@ -250,7 +248,7 @@ class TestExcelOperations:
             apartment_number=1,
             first_name="Jane",
             last_name="Smith",
-            phone="0509876543"
+            phone="0509876543",
         )
         ops.create_tenant(tenant)
         with pytest.raises(ValidationError):
@@ -264,7 +262,7 @@ class TestExcelOperations:
             apartment_number=1,
             first_name="Jane",
             last_name="Smith",
-            phone="0509876543"
+            phone="0509876543",
         )
         ops.create_tenant(tenant)
         tenant.first_name = "Janet"
@@ -279,7 +277,7 @@ class TestExcelOperations:
             apartment_number=1,
             first_name="Jane",
             last_name="Smith",
-            phone="0509876543"
+            phone="0509876543",
         )
         ops.create_tenant(tenant)
         history = ops.end_tenancy(11, 1, date(2025, 12, 31))
@@ -294,7 +292,7 @@ class TestExcelOperations:
                 apartment_number=i + 1,
                 first_name=f"Tenant{i}",
                 last_name="Test",
-                phone=f"050123456{i}"
+                phone=f"050123456{i}",
             )
             ops.create_tenant(tenant)
         tenants = ops.get_all_tenants()
@@ -309,7 +307,7 @@ class TestExcelOperations:
                 apartment_number=1,
                 first_name=f"Tenant{bldg}",
                 last_name="Test",
-                phone=f"050{bldg}34567"
+                phone=f"050{bldg}34567",
             )
             ops.create_tenant(tenant)
         tenants = ops.get_all_tenants(building=11)

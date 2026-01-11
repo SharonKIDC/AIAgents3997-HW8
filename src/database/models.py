@@ -62,10 +62,9 @@ class Building(BaseModel):
         buildings_config = config.get("buildings", [])
         buildings = []
         for bldg in buildings_config:
-            buildings.append(cls(
-                number=bldg.get("number", 0),
-                total_apartments=bldg.get("total_apartments", 0)
-            ))
+            buildings.append(
+                cls(number=bldg.get("number", 0), total_apartments=bldg.get("total_apartments", 0))
+            )
         return sorted(buildings, key=lambda b: b.number)
 
     @classmethod
@@ -75,10 +74,7 @@ class Building(BaseModel):
         buildings_config = config.get("buildings", [])
         for bldg in buildings_config:
             if bldg.get("number") == number:
-                return cls(
-                    number=number,
-                    total_apartments=bldg.get("total_apartments", 0)
-                )
+                return cls(number=number, total_apartments=bldg.get("total_apartments", 0))
         return None
 
 

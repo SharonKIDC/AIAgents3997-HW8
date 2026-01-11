@@ -8,8 +8,12 @@ from datetime import date
 from typing import Dict, Any, Optional
 
 from src.database import (
-    Tenant, OwnerInfo, ExcelOperations, ExcelManager,
-    TenantQueries, DataValidator
+    Tenant,
+    OwnerInfo,
+    ExcelOperations,
+    ExcelManager,
+    TenantQueries,
+    DataValidator,
 )
 from src.exceptions import NotFoundError
 
@@ -41,15 +45,23 @@ class TenantTools:
                         "last_name": {"type": "string"},
                         "phone": {"type": "string"},
                         "is_owner": {"type": "boolean", "default": True},
-                        "owner_info": {"type": "object", "properties": {
-                            "first_name": {"type": "string"},
-                            "last_name": {"type": "string"},
-                            "phone": {"type": "string"}
-                        }}
+                        "owner_info": {
+                            "type": "object",
+                            "properties": {
+                                "first_name": {"type": "string"},
+                                "last_name": {"type": "string"},
+                                "phone": {"type": "string"},
+                            },
+                        },
                     },
-                    "required": ["building_number", "apartment_number",
-                                 "first_name", "last_name", "phone"]
-                }
+                    "required": [
+                        "building_number",
+                        "apartment_number",
+                        "first_name",
+                        "last_name",
+                        "phone",
+                    ],
+                },
             },
             {
                 "name": "update_tenant",
@@ -59,10 +71,10 @@ class TenantTools:
                     "properties": {
                         "building_number": {"type": "integer"},
                         "apartment_number": {"type": "integer"},
-                        "updates": {"type": "object"}
+                        "updates": {"type": "object"},
                     },
-                    "required": ["building_number", "apartment_number", "updates"]
-                }
+                    "required": ["building_number", "apartment_number", "updates"],
+                },
             },
             {
                 "name": "end_tenancy",
@@ -72,10 +84,10 @@ class TenantTools:
                     "properties": {
                         "building_number": {"type": "integer"},
                         "apartment_number": {"type": "integer"},
-                        "move_out_date": {"type": "string", "format": "date"}
+                        "move_out_date": {"type": "string", "format": "date"},
                     },
-                    "required": ["building_number", "apartment_number"]
-                }
+                    "required": ["building_number", "apartment_number"],
+                },
             },
             {
                 "name": "get_tenant",
@@ -84,11 +96,11 @@ class TenantTools:
                     "type": "object",
                     "properties": {
                         "building_number": {"type": "integer"},
-                        "apartment_number": {"type": "integer"}
+                        "apartment_number": {"type": "integer"},
                     },
-                    "required": ["building_number", "apartment_number"]
-                }
-            }
+                    "required": ["building_number", "apartment_number"],
+                },
+            },
         ]
 
     def create_tenant(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -107,16 +119,14 @@ class TenantTools:
             parking_slot_2=params.get("parking_slot_2"),
             is_owner=params.get("is_owner", True),
             owner_info=owner_info,
-            move_in_date=date.today()
+            move_in_date=date.today(),
         )
         created = self._operations.create_tenant(tenant)
         return {"success": True, "tenant": created.model_dump()}
 
     def update_tenant(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Update an existing tenant."""
-        tenant = self._manager.get_tenant(
-            params["building_number"], params["apartment_number"]
-        )
+        tenant = self._manager.get_tenant(params["building_number"], params["apartment_number"])
         if not tenant:
             raise NotFoundError("Tenant not found")
         updates = params.get("updates", {})
@@ -140,9 +150,7 @@ class TenantTools:
 
     def get_tenant(self, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Get current tenant for an apartment."""
-        tenant = self._manager.get_tenant(
-            params["building_number"], params["apartment_number"]
-        )
+        tenant = self._manager.get_tenant(params["building_number"], params["apartment_number"])
         if tenant:
             return {"success": True, "tenant": tenant.model_dump()}
         return {"success": True, "tenant": None}

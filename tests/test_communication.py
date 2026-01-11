@@ -40,9 +40,7 @@ class TestToolDefinition:
     def test_tool_definition_creation(self):
         """Test tool definition creation."""
         tool = ToolDefinition(
-            name="create_tenant",
-            description="Create a new tenant",
-            parameters={"type": "object"}
+            name="create_tenant", description="Create a new tenant", parameters={"type": "object"}
         )
         assert tool.name == "create_tenant"
         assert tool.description == "Create a new tenant"
@@ -60,9 +58,7 @@ class TestResourceDefinition:
     def test_resource_definition_creation(self):
         """Test resource definition creation."""
         resource = ResourceDefinition(
-            uri="/buildings",
-            name="buildings",
-            description="List of buildings"
+            uri="/buildings", name="buildings", description="List of buildings"
         )
         assert resource.uri == "/buildings"
         assert resource.name == "buildings"
@@ -76,7 +72,7 @@ class TestPromptDefinition:
         prompt = PromptDefinition(
             name="occupancy_report",
             description="Generate occupancy report",
-            arguments=[{"name": "building", "required": False}]
+            arguments=[{"name": "building", "required": False}],
         )
         assert prompt.name == "occupancy_report"
         assert len(prompt.arguments) == 1
@@ -133,7 +129,7 @@ class TestMCPHttpClient:
         mock_response.json.return_value = {
             "tools": [
                 {"name": "tool1", "description": "Tool 1", "parameters": {}},
-                {"name": "tool2", "description": "Tool 2"}
+                {"name": "tool2", "description": "Tool 2"},
             ]
         }
         mock_session.request.return_value = mock_response
@@ -157,7 +153,7 @@ class TestMCPHttpClient:
             url="http://test:8000/tools/invoke",
             json={"name": "create_tenant", "arguments": {"building": 11}},
             params=None,
-            timeout=10
+            timeout=10,
         )
 
     def test_list_resources(self, client, mock_session):
@@ -189,7 +185,7 @@ class TestMCPHttpClient:
             url="http://test:8000/resources/buildings",
             json=None,
             params=None,
-            timeout=10
+            timeout=10,
         )
 
     def test_list_prompts(self, client, mock_session):
@@ -197,9 +193,7 @@ class TestMCPHttpClient:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "prompts": [
-                {"name": "report", "description": "Generate report", "arguments": []}
-            ]
+            "prompts": [{"name": "report", "description": "Generate report", "arguments": []}]
         }
         mock_session.request.return_value = mock_response
 

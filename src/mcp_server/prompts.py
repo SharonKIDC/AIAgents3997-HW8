@@ -8,8 +8,10 @@ from typing import Dict, Any
 
 from src.database import Building
 from src.mcp_server.prompt_templates import (
-    OCCUPANCY_TEMPLATE, TENANT_LIST_TEMPLATE,
-    HISTORY_TEMPLATE, SYSTEM_PROMPT_TEMPLATE
+    OCCUPANCY_TEMPLATE,
+    TENANT_LIST_TEMPLATE,
+    HISTORY_TEMPLATE,
+    SYSTEM_PROMPT_TEMPLATE,
 )
 
 
@@ -24,38 +26,44 @@ class ReportPrompts:
                 "name": "occupancy_report",
                 "description": "Generate occupancy report for buildings",
                 "arguments": [
-                    {"name": "building", "description": "Building number (optional)",
-                     "required": False}
-                ]
+                    {
+                        "name": "building",
+                        "description": "Building number (optional)",
+                        "required": False,
+                    }
+                ],
             },
             {
                 "name": "tenant_list_report",
                 "description": "Generate tenant list report",
                 "arguments": [
-                    {"name": "building", "description": "Building number (optional)",
-                     "required": False},
-                    {"name": "include_contacts", "description": "Include phone numbers",
-                     "required": False}
-                ]
+                    {
+                        "name": "building",
+                        "description": "Building number (optional)",
+                        "required": False,
+                    },
+                    {
+                        "name": "include_contacts",
+                        "description": "Include phone numbers",
+                        "required": False,
+                    },
+                ],
             },
             {
                 "name": "history_report",
                 "description": "Generate tenant history report for an apartment",
                 "arguments": [
-                    {"name": "building", "description": "Building number",
-                     "required": True},
-                    {"name": "apartment", "description": "Apartment number",
-                     "required": True}
-                ]
+                    {"name": "building", "description": "Building number", "required": True},
+                    {"name": "apartment", "description": "Apartment number", "required": True},
+                ],
             },
             {
                 "name": "custom_query",
                 "description": "Process a natural language query about tenants",
                 "arguments": [
-                    {"name": "query", "description": "Natural language query",
-                     "required": True}
-                ]
-            }
+                    {"name": "query", "description": "Natural language query", "required": True}
+                ],
+            },
         ]
 
     @staticmethod
@@ -92,13 +100,12 @@ class ReportPrompts:
         """Get prompt for custom natural language query."""
         buildings = Building.get_all_buildings()
         building_info = ", ".join(
-            [f"Building {b.number} ({b.total_apartments} apartments)"
-             for b in buildings]
+            [f"Building {b.number} ({b.total_apartments} apartments)" for b in buildings]
         )
         system_text = SYSTEM_PROMPT_TEMPLATE.format(building_info=building_info)
         return {
             "messages": [
                 {"role": "system", "content": {"type": "text", "text": system_text}},
-                {"role": "user", "content": {"type": "text", "text": query}}
+                {"role": "user", "content": {"type": "text", "text": query}},
             ]
         }
