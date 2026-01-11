@@ -1,0 +1,23 @@
+# Production dependencies for Residential Complex Tenant Management System
+
+# Excel database operations
+openpyxl>=3.1.2
+
+# MCP Server web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.4.0
+
+# AI integration
+anthropic>=0.7.0
+
+# Configuration management
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+
+# Utility libraries
+python-dateutil>=2.8.2
+
+# PDF generation for reports
+reportlab>=4.0.0
+markdown>=3.5.0
