@@ -38,39 +38,20 @@ The Residential Complex Tenant Management System is a local, web-based applicati
 
 ### Level 1: System Context
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         System Context                            │
-│                                                                    │
-│  ┌───────────────┐                                                │
-│  │  Building     │                                                │
-│  │  Manager      │                                                │
-│  │  (Human)      │                                                │
-│  └───────┬───────┘                                                │
-│          │                                                         │
-│          │ Manages tenants,                                       │
-│          │ generates reports                                      │
-│          │                                                         │
-│          ▼                                                         │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                                                           │    │
-│  │   Residential Complex Tenant Management System          │    │
-│  │                                                           │    │
-│  │   • Tenant registration and tracking                    │    │
-│  │   • Historical data preservation                        │    │
-│  │   • AI-powered report generation                        │    │
-│  │   • Multi-building support                              │    │
-│  │                                                           │    │
-│  └────────────────┬──────────────────────────┬─────────────┘    │
-│                   │                           │                   │
-│                   │                           │                   │
-│                   ▼                           ▼                   │
-│         ┌──────────────────┐      ┌─────────────────┐           │
-│         │   Excel Database │      │  AI Model API   │           │
-│         │   (Local File)   │      │  (Anthropic)    │           │
-│         └──────────────────┘      └─────────────────┘           │
-│                                                                    │
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    User[Building Manager<br/>Human User]
+
+    subgraph System[Tenant Management System]
+        App[Web Application<br/>Tenant CRUD, Reports, Dashboard]
+    end
+
+    Excel[(Excel Database<br/>tenants.xlsx)]
+    AI[OpenAI API<br/>GPT-4]
+
+    User -->|Manages tenants,<br/>generates reports| App
+    App -->|Read/Write| Excel
+    App -->|AI Queries| AI
 ```
 
 **External Dependencies**:
@@ -79,113 +60,78 @@ The Residential Complex Tenant Management System is a local, web-based applicati
 
 ### Level 2: Container Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     Container Architecture                           │
-│                                                                       │
-│  ┌──────────────┐                                                   │
-│  │  Building    │                                                   │
-│  │  Manager     │                                                   │
-│  └──────┬───────┘                                                   │
-│         │                                                            │
-│         │ HTTPS                                                      │
-│         │                                                            │
-│         ▼                                                            │
-│  ┌──────────────────────────────────────────────────────┐          │
-│  │         React Web Application                        │          │
-│  │         (Single Page Application)                    │          │
-│  │                                                       │          │
-│  │  • Dashboard          • Tenant Forms                │          │
-│  │  • Search & Filter    • Report Interface            │          │
-│  │  • Historical Views   • AI Query Input              │          │
-│  │                                                       │          │
-│  │  Technology: React 18+, JavaScript/TypeScript       │          │
-│  └───────────────────────┬──────────────────────────────┘          │
-│                          │                                          │
-│                          │ REST API (JSON)                          │
-│                          │ http://localhost:8000                    │
-│                          │                                          │
-│                          ▼                                          │
-│  ┌──────────────────────────────────────────────────────┐          │
-│  │         MCP Server                                   │          │
-│  │         (Model Context Protocol Server)              │          │
-│  │                                                       │          │
-│  │  • Tenant CRUD API       • Report Generation API   │          │
-│  │  • Building Management   • Historical Data API      │          │
-│  │  • Parking Management    • Search API               │          │
-│  │  • WhatsApp Tracking     • Backup/Restore           │          │
-│  │                                                       │          │
-│  │  Technology: Python 3.10+, FastAPI/Flask            │          │
-│  └───────┬────────────────────────────┬─────────────────┘          │
-│          │                             │                            │
-│          │ openpyxl                    │ HTTP API                   │
-│          │                             │                            │
-│          ▼                             ▼                            │
-│  ┌────────────────┐          ┌──────────────────┐                 │
-│  │  Excel         │          │  AI Agent        │                 │
-│  │  Database      │          │  Component       │                 │
-│  │                │          │                  │                 │
-│  │  tenants.xlsx  │          │  • Query Parser  │                 │
-│  │  • Buildings   │          │  • MD Generator  │                 │
-│  │  • Tenants     │          │  • PDF Export    │                 │
-│  │  • History     │          │                  │                 │
-│  │                │          │  Anthropic API   │                 │
-│  └────────────────┘          └──────────────────┘                 │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    User[Building Manager]
+
+    subgraph Frontend[Web UI Container]
+        WebApp[FastAPI + React<br/>Port 8080]
+    end
+
+    subgraph Backend[MCP Server Container]
+        MCPServer[FastAPI MCP Server<br/>Port 8000]
+        Tools[Tools<br/>Create/Update/Delete]
+        Resources[Resources<br/>Read Operations]
+        Prompts[Prompts<br/>AI Templates]
+    end
+
+    subgraph Data[Data Layer]
+        Excel[(Excel Database<br/>tenants.xlsx)]
+    end
+
+    subgraph AI[AI Layer]
+        Agent[Report Agent]
+        OpenAI[OpenAI GPT-4]
+    end
+
+    User -->|HTTP| WebApp
+    WebApp -->|REST API| MCPServer
+    MCPServer --> Tools
+    MCPServer --> Resources
+    MCPServer --> Prompts
+    Tools --> Excel
+    Resources --> Excel
+    Prompts --> Agent
+    Agent --> OpenAI
 ```
 
 ### Level 3: Component Diagram (MCP Server)
 
-```
-┌────────────────────────────────────────────────────────────┐
-│                    MCP Server Components                    │
-│                                                              │
-│  ┌────────────────────────────────────────────────────┐   │
-│  │           API Layer (FastAPI/Flask)                 │   │
-│  │                                                      │   │
-│  │  /api/tenants/*   /api/buildings/*                 │   │
-│  │  /api/reports/*   /api/search/*                    │   │
-│  │  /api/history/*   /api/parking/*                   │   │
-│  └─────────────────┬────────────────────────────────────┘   │
-│                    │                                         │
-│  ┌─────────────────▼────────────────────────────────────┐   │
-│  │           Service Layer                              │   │
-│  │                                                       │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌──────────────┐  │   │
-│  │  │  Tenant    │  │  Building  │  │   Report     │  │   │
-│  │  │  Service   │  │  Service   │  │   Service    │  │   │
-│  │  └────────────┘  └────────────┘  └──────────────┘  │   │
-│  │                                                       │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌──────────────┐  │   │
-│  │  │  History   │  │  Parking   │  │  Validation  │  │   │
-│  │  │  Service   │  │  Service   │  │  Service     │  │   │
-│  │  └────────────┘  └────────────┘  └──────────────┘  │   │
-│  └─────────────────┬────────────────────────────────────┘   │
-│                    │                                         │
-│  ┌─────────────────▼────────────────────────────────────┐   │
-│  │           Data Access Layer                          │   │
-│  │                                                       │   │
-│  │  ┌─────────────────────────────────────────────┐    │   │
-│  │  │     Excel Repository                        │    │   │
-│  │  │                                              │    │   │
-│  │  │  • Read operations (openpyxl)              │    │   │
-│  │  │  • Write operations (openpyxl)             │    │   │
-│  │  │  • Transaction management                   │    │   │
-│  │  │  • Backup utilities                         │    │   │
-│  │  └─────────────────────────────────────────────┘    │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                              │
-│  ┌────────────────────────────────────────────────────┐   │
-│  │           Integration Layer                         │   │
-│  │                                                      │   │
-│  │  ┌──────────────────┐    ┌──────────────────┐     │   │
-│  │  │   AI Client      │    │  Config Loader   │     │   │
-│  │  │   (Anthropic)    │    │  (YAML + ENV)    │     │   │
-│  │  └──────────────────┘    └──────────────────┘     │   │
-│  └────────────────────────────────────────────────────┘   │
-│                                                              │
-└────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph API[API Layer - FastAPI]
+        Routes["/tools, /resources, /prompts"]
+    end
+
+    subgraph MCP[MCP Components]
+        TTools[TenantTools<br/>create, update, delete]
+        TResources[TenantResources<br/>buildings, tenants, occupancy]
+        RPrompts[ReportPrompts<br/>occupancy, tenant_list, history]
+    end
+
+    subgraph Database[Database Layer]
+        ExcelMgr[ExcelManager<br/>Low-level I/O]
+        ExcelOps[ExcelOperations<br/>Business Logic]
+        Queries[TenantQueries<br/>Complex Queries]
+        Validator[DataValidator<br/>Validation Rules]
+    end
+
+    subgraph Infra[Infrastructure]
+        Config[Config Loader<br/>YAML + .env]
+        Logger[Logger<br/>Structured Logging]
+        Errors[Exceptions<br/>Error Hierarchy]
+    end
+
+    Routes --> TTools
+    Routes --> TResources
+    Routes --> RPrompts
+    TTools --> ExcelOps
+    TResources --> Queries
+    ExcelOps --> ExcelMgr
+    Queries --> ExcelMgr
+    ExcelMgr --> Validator
+    ExcelMgr --> Config
+    Queries --> Config
 ```
 
 ---
@@ -567,43 +513,49 @@ Response: 200 OK
 
 ### Flow 1: New Tenant Registration
 
-```
-User → React UI → API Client → MCP Server → Excel DB
-  1. User fills tenant form in React UI
-  2. UI validates input (client-side)
-  3. API Client sends POST /api/tenants
-  4. MCP Server validates building/apartment
-  5. MCP Server checks for duplicate (building, apt, is_current=TRUE)
-  6. Excel Repository writes tenant record
-  7. Response returns with tenant_id
-  8. UI shows success message and navigates to tenant detail
+```mermaid
+flowchart LR
+    A[User] -->|1. Fill Form| B[Web UI]
+    B -->|2. Validate| B
+    B -->|3. POST /tools/invoke| C[MCP Server]
+    C -->|4. Validate| D[DataValidator]
+    D -->|5. Check Duplicate| E[TenantQueries]
+    E -->|6. Write Record| F[ExcelManager]
+    F -->|7. Response| C
+    C -->|8. Success| B
+    B -->|9. Show Result| A
 ```
 
 ### Flow 2: Generate AI Report
 
-```
-User → React UI → MCP Server → AI Agent → Anthropic API
-  1. User enters natural language query
-  2. React UI sends query to POST /api/reports/query
-  3. Report Service parses query
-  4. AI Agent fetches relevant tenant data from Excel
-  5. AI Agent sends prompt to Anthropic Claude API
-  6. Anthropic returns Markdown report
-  7. AI Agent converts MD to PDF
-  8. Report Service returns report data
-  9. UI displays Markdown and offers PDF download
+```mermaid
+flowchart LR
+    A[User] -->|1. Enter Query| B[Web UI]
+    B -->|2. POST /prompts/generate| C[MCP Server]
+    C -->|3. Build Prompt| D[ReportPrompts]
+    D -->|4. Return Messages| C
+    C -->|5. Send to Agent| E[ReportAgent]
+    E -->|6. Call LLM| F[OpenAI API]
+    F -->|7. Return Text| E
+    E -->|8. Format Report| C
+    C -->|9. Markdown| B
+    B -->|10. Display| A
 ```
 
 ### Flow 3: View Tenant History
 
-```
-User → React UI → MCP Server → Excel DB
-  1. User clicks "View History" on apartment
-  2. UI requests GET /api/tenants/apartment/{building}/{apt}/history
-  3. History Service queries History sheet
-  4. History Service sorts by move_out_date DESC
-  5. History Service returns timeline data
-  6. UI renders timeline visualization
+```mermaid
+flowchart LR
+    A[User] -->|1. Click History| B[Web UI]
+    B -->|2. GET /resources/tenants/.../history| C[MCP Server]
+    C -->|3. Query| D[TenantResources]
+    D -->|4. Get History| E[TenantQueries]
+    E -->|5. Read Excel| F[ExcelManager]
+    F -->|6. Return Data| E
+    E -->|7. Format| D
+    D -->|8. Response| C
+    C -->|9. JSON| B
+    B -->|10. Render Timeline| A
 ```
 
 ---

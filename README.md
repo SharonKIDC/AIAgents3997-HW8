@@ -1,10 +1,20 @@
 # Residential Complex Tenant Management System
 
-A local web-based application for managing tenant information across multiple residential buildings, featuring Excel-based storage, MCP server abstraction, React UI, and AI-powered report generation.
+A local web-based application for managing tenant information across multiple residential buildings, featuring Excel-based storage, MCP server abstraction, and AI-powered report generation.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-174%20passed-brightgreen.svg)](tests/)
+[![Coverage](https://img.shields.io/badge/Coverage-81.81%25-yellow.svg)](htmlcov/)
+
+---
+
+## Application Screenshot
+
+![Tenant Management Dashboard](docs/assets/dashboard-screenshot.png)
+
+*Dashboard showing building occupancy statistics, interactive building cards, and AI query interface*
 
 ---
 
@@ -12,56 +22,93 @@ A local web-based application for managing tenant information across multiple re
 
 - [Overview](#overview)
 - [Features](#features)
+- [Quick Start](#quick-start)
 - [Architecture](#architecture)
-- [Requirements](#requirements)
-- [Installation](#installation)
+- [Project Structure](#project-structure)
+- [API Reference](#api-reference)
+- [SDK Usage](#sdk-usage)
 - [Configuration](#configuration)
-- [Usage](#usage)
-- [Development](#development)
 - [Testing](#testing)
-- [Deployment](#deployment)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
+- [Documentation](#documentation)
 - [License](#license)
 
 ---
 
 ## Overview
 
-This system centralizes tenant management for residential complexes with multiple buildings (Buildings 11, 13, 15, 17). It replaces manual Excel processes with a web-based interface while maintaining Excel as the underlying database for simplicity and transparency.
+This system centralizes tenant management for residential complexes with 4 buildings (11, 13, 15, 17). It provides:
 
-**Problem Solved**: Building managers spend 5-10 hours per week managing tenant records manually, leading to data inconsistencies, lost historical information, and delayed responses to tenant needs.
+- **Web Dashboard**: Visual occupancy overview with interactive building cards
+- **Tenant Management**: Full CRUD operations with historical data preservation
+- **AI Reports**: Natural language queries via OpenAI GPT integration
+- **MCP Protocol**: Model Context Protocol server for structured data access
 
-**Solution**: Centralized system with:
-- Web-based tenant registration and management
-- Complete historical data preservation
-- AI-powered report generation
-- Multi-building support
-- Parking access and WhatsApp group tracking
+**Target Users**: Building managers and property administrators
+
+**Key Benefit**: Reduces manual tenant data management from 5-10 hours/week to under 1 hour
 
 ---
 
 ## Features
 
-### Core Features
+| Feature | Description |
+|---------|-------------|
+| Multi-Building Support | Buildings 11, 13, 15, 17 with 35-40 apartments each |
+| Tenant Registration | Owner/renter tracking, move-in/out dates, parking, storage |
+| Family Members | WhatsApp group and PalGate access tracking |
+| Historical Data | Complete tenant history preserved (never overwritten) |
+| AI Reports | Natural language queries generate Markdown reports |
+| Excel Database | Simple XLSX storage with automatic backups |
+| REST API | FastAPI-based MCP server with OpenAPI documentation |
+| Python SDK | High-level client for programmatic access |
 
-- **Multi-Building Management**: Support for buildings 11, 13, 15, 17 with varying apartment counts
-- **Tenant Registration**: Track owner/renter status, move-in/move-out dates, parking slots, storage units
-- **Family Members**: Track family members with WhatsApp group and PalGate access permissions
-- **Historical Data**: Complete tenant history per apartment (never overwritten)
-- **AI Reports**: Natural language queries generate Markdown and PDF reports
-- **Search & Filter**: Quick search by tenant name, building, parking status
-- **Interactive Dashboard**: Visual occupancy overview with building icons, floor maps, and statistics
-- **Floor Map Visualization**: Click on buildings to view detailed floor-by-floor apartment status
+---
 
-### Technical Features
+## Quick Start
 
-- **Excel Database**: Simple XLSX storage with automatic backups
-- **MCP Server**: FastAPI-based abstraction layer for database operations
-- **React UI**: Responsive web interface with building-themed design and SVG visualizations
-- **Configurable Validation**: Phone, name, and vehicle plate patterns configurable in YAML
-- **5-Stage Architecture**: Infrastructure → Tools → MCP → Communication → UI
-- **No Hardcoded Values**: All configuration externalized to config.yaml and .env
+### Prerequisites
+
+- Python 3.10+
+- pip
+
+### Installation
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/tenant-management.git
+cd tenant-management
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+pip install -e .
+
+# Copy environment config
+cp .env.example .env
+
+# Create data directories
+mkdir -p data/excel data/backups logs
+```
+
+### Start the Server
+
+```bash
+# Start MCP server (port 8000)
+uvicorn src.mcp_server.server:app --reload
+
+# Start Web UI server (port 8080)
+uvicorn src.web_ui.backend:web_app --port 8080
+```
+
+### Access the Application
+
+- **Web UI**: http://localhost:8080
+- **API Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/
 
 ---
 
@@ -69,127 +116,224 @@ This system centralizes tenant management for residential complexes with multipl
 
 The system follows a 5-stage MCP (Model Context Protocol) architecture:
 
-```
-┌─────────────────────────────────────────────────┐
-│  Stage 5: SDK/UI (React Web Application)       │
-└─────────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────────┐
-│  Stage 4: Communication Layer (API Client)      │
-└─────────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────────┐
-│  Stage 3: Full MCP Server (REST API)            │
-└─────────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────────┐
-│  Stage 2: Basic Tools (Excel Utilities)         │
-└─────────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────────┐
-│  Stage 1: Infrastructure (Config, Logging)      │
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Stage5[Stage 5: UI Layer]
+        WebUI[Web UI - FastAPI + React]
+        SDK[Python SDK]
+    end
+
+    subgraph Stage4[Stage 4: Communication]
+        HTTPClient[MCP HTTP Client]
+    end
+
+    subgraph Stage3[Stage 3: MCP Server]
+        Tools[Tools - Create/Update/Delete]
+        Resources[Resources - Read Operations]
+        Prompts[Prompts - AI Report Templates]
+    end
+
+    subgraph Stage2[Stage 2: Database Layer]
+        ExcelOps[Excel Operations]
+        Queries[Tenant Queries]
+        Validator[Data Validator]
+    end
+
+    subgraph Stage1[Stage 1: Infrastructure]
+        Config[Configuration]
+        Logging[Logging]
+        Exceptions[Exception Handling]
+    end
+
+    WebUI --> HTTPClient
+    SDK --> HTTPClient
+    HTTPClient --> Tools
+    HTTPClient --> Resources
+    HTTPClient --> Prompts
+    Tools --> ExcelOps
+    Resources --> Queries
+    ExcelOps --> Config
+    Queries --> Config
+    Validator --> Config
 ```
 
-**See**: [docs/Architecture.md](docs/Architecture.md) for complete technical documentation.
+### Component Overview
+
+| Stage | Package | Purpose |
+|-------|---------|---------|
+| 1 | `src/config`, `src/logging_config`, `src/exceptions` | Configuration, logging, error handling |
+| 2 | `src/database` | Excel operations, queries, validation |
+| 3 | `src/mcp_server` | FastAPI REST API (tools, resources, prompts) |
+| 4 | `src/communication` | HTTP client for MCP protocol |
+| 5 | `src/sdk`, `src/web_ui`, `src/ai_agent` | High-level SDK, web interface, AI reports |
 
 ---
 
-## Requirements
+## Project Structure
 
-### System Requirements
-
-- **Operating System**: Linux, macOS, or Windows
-- **Python**: 3.10 or higher
-- **Node.js**: 16+ (for React frontend)
-- **npm**: 8+ (comes with Node.js)
-- **Disk Space**: 100 MB (excluding data)
-
-### Browser Requirements
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-### Optional
-
-- Git 2.23+ (for worktree support)
-- AI API Access: Anthropic API key for report generation
+```
+tenant-management/
+├── src/
+│   ├── config/              # Configuration loading (YAML + .env)
+│   ├── logging_config/      # Structured logging setup
+│   ├── exceptions/          # Custom exception hierarchy
+│   ├── database/            # Excel database operations
+│   │   ├── models.py        # Pydantic data models
+│   │   ├── excel_manager.py # Low-level Excel I/O
+│   │   ├── excel_operations.py # Business operations
+│   │   ├── queries.py       # Query functions
+│   │   └── validators.py    # Data validation
+│   ├── mcp_server/          # MCP REST API
+│   │   ├── server.py        # FastAPI application
+│   │   ├── tools.py         # Write operations (create, update, delete)
+│   │   ├── resources.py     # Read operations (get, list)
+│   │   └── prompts.py       # AI prompt templates
+│   ├── communication/       # MCP client
+│   │   └── http_client.py   # HTTP client implementation
+│   ├── sdk/                 # High-level SDK
+│   │   └── client.py        # TenantSDK class
+│   ├── ai_agent/            # AI report generation
+│   │   ├── reporter.py      # LLM integration
+│   │   └── pdf_generator.py # PDF export
+│   └── web_ui/              # Web interface
+│       ├── backend.py       # FastAPI app for UI
+│       ├── routes.py        # API routes for UI
+│       └── static/          # React app (compiled)
+├── tests/                   # Test suite (174 tests)
+├── docs/                    # Documentation
+├── config.yaml              # Application configuration
+├── .env.example             # Environment template
+├── requirements.txt         # Production dependencies
+├── requirements-dev.txt     # Development dependencies
+└── pyproject.toml           # Package configuration
+```
 
 ---
 
-## Installation
+## API Reference
 
-### 1. Clone Repository
+### MCP Server Endpoints
+
+**Base URL**: `http://localhost:8000`
+
+#### Tools (State-Changing Operations)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/tools/invoke` | Invoke a tool (create_tenant, update_tenant, end_tenancy, get_tenant) |
+| GET | `/tools` | List available tools |
+
+#### Resources (Read Operations)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/resources/buildings` | Get all buildings |
+| GET | `/resources/buildings/{number}` | Get building details with occupancy |
+| GET | `/resources/tenants` | Get all tenants (optional: `?building=11`) |
+| GET | `/resources/tenants/{building}/{apartment}/history` | Get tenant history |
+| GET | `/resources/occupancy` | Get occupancy statistics |
+| GET | `/resources/whatsapp` | Get WhatsApp contacts |
+| GET | `/resources/parking` | Get parking authorizations |
+
+#### Prompts (AI Report Templates)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/prompts` | List available prompts |
+| POST | `/prompts/generate` | Generate AI prompt for report |
+
+### Example API Calls
 
 ```bash
-git clone https://github.com/yourusername/tenant-management.git
-cd tenant-management
+# Get all buildings
+curl http://localhost:8000/resources/buildings
+
+# Get tenants in building 11
+curl "http://localhost:8000/resources/tenants?building=11"
+
+# Create a tenant
+curl -X POST http://localhost:8000/tools/invoke \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "create_tenant",
+    "arguments": {
+      "building_number": 11,
+      "apartment_number": 101,
+      "first_name": "John",
+      "last_name": "Smith",
+      "phone": "054-1234567",
+      "is_owner": true
+    }
+  }'
+
+# Generate AI report prompt
+curl -X POST http://localhost:8000/prompts/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "occupancy_report",
+    "arguments": {"building": 11}
+  }'
 ```
 
-### 2. Python Environment Setup
+---
 
-```bash
-# Create virtual environment
-python3 -m venv .venv
+## SDK Usage
 
-# Activate environment
-source .venv/bin/activate  # Linux/Mac
-# OR: .venv\Scripts\activate  # Windows
+### Python SDK
 
-# Upgrade pip
-python -m pip install --upgrade pip setuptools wheel
+```python
+from src.sdk import TenantSDK
 
-# Install dependencies
-pip install -r requirements.txt -r requirements-dev.txt
+# Initialize SDK
+sdk = TenantSDK(base_url="http://localhost:8000")
 
-# Install package in editable mode
-pip install -e .
+# Create a tenant
+result = sdk.create_tenant(
+    building=11,
+    apartment=101,
+    first_name="John",
+    last_name="Smith",
+    phone="054-1234567",
+    is_owner=True
+)
+
+# Get tenant info
+tenant = sdk.get_tenant(building=11, apartment=101)
+print(f"Tenant: {tenant.full_name}")
+
+# Get building occupancy
+building = sdk.get_building_occupancy(11)
+print(f"Occupancy: {building.occupancy_rate}%")
+
+# Get all tenants
+tenants = sdk.get_all_tenants(building=11)
+for t in tenants:
+    print(f"  - Apt {t['apartment_number']}: {t['first_name']} {t['last_name']}")
+
+# Close connection
+sdk.close()
 ```
 
-### 3. Frontend Setup
+### AI Report Agent
 
-```bash
-cd src/web_ui
-npm install
-cd ../..
-```
+```python
+from src.ai_agent import ReportAgent
 
-### 4. Configuration
+with ReportAgent() as agent:
+    # Generate occupancy report
+    report = agent.generate_occupancy_report(building=11)
+    print(report.content)
 
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your values
-nano .env
-```
-
-**Required Configuration**:
-- Set `EXCEL_DATABASE_PATH` (default: `./data/excel/tenants.xlsx`)
-- Set `AI_API_KEY` if using AI report generation
-- Review and update other settings as needed
-
-**See**: [docs/CONFIG.md](docs/CONFIG.md) for detailed configuration guide.
-
-### 5. Initialize Database
-
-```bash
-# Create data directories
-mkdir -p data/excel data/backups logs reports
-
-# Initialize Excel database (creates blank template)
-python -m src.database.init_db
+    # Custom natural language query
+    report = agent.process_custom_query("How many vacant apartments in building 15?")
+    print(report.content)
 ```
 
 ---
 
 ## Configuration
 
-### Environment Variables
-
-Create `.env` from `.env.example` and configure:
+### Environment Variables (`.env`)
 
 ```bash
 # Database
@@ -200,309 +344,85 @@ MCP_SERVER_HOST=localhost
 MCP_SERVER_PORT=8000
 
 # Web UI
-REACT_APP_API_BASE_URL=http://localhost:8000
-REACT_APP_ENVIRONMENT=development
+WEB_UI_PORT=8080
 
-# AI Agent
-AI_MODEL_PROVIDER=anthropic
-AI_MODEL_NAME=claude-sonnet-4-5
-AI_API_KEY=sk-ant-your-key-here
+# AI (Optional - for report generation)
+OPENAI_API_KEY=sk-your-key-here
+AI_MODEL_NAME=gpt-4o
 ```
 
-### Application Configuration
+### Application Config (`config.yaml`)
 
-Edit `config.yaml` to customize:
-- Building numbers and apartment counts
-- Backup intervals
-- Feature flags
-- Session timeouts
+```yaml
+buildings:
+  - number: 11
+    total_apartments: 40
+  - number: 13
+    total_apartments: 35
+  - number: 15
+    total_apartments: 40
+  - number: 17
+    total_apartments: 35
 
-**See**: [docs/CONFIG.md](docs/CONFIG.md) for complete configuration reference.
+database:
+  backup_enabled: true
+  backup_interval_hours: 24
 
----
-
-## Usage
-
-### Start MCP Server
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate
-
-# Start server
-python -m src.mcp_server.main
-
-# Server runs on http://localhost:8000
+validation:
+  phone_pattern: "^05[0-9]-[0-9]{7}$"
+  name_pattern: "^[A-Za-z\\s\\-']+$"
 ```
-
-### Start Web UI
-
-```bash
-# In a new terminal
-cd src/web_ui
-npm start
-
-# UI opens at http://localhost:3000
-```
-
-### Access Application
-
-1. Open browser to http://localhost:3000
-2. Dashboard shows occupancy overview
-3. Click "Add Tenant" to register new tenant
-4. Use search/filter to find tenants
-5. Click "Generate Report" for AI-powered insights
-
-### Common Tasks
-
-#### Add New Tenant
-
-1. Navigate to "Tenants" → "Add New"
-2. Fill in required fields (building, apartment, names, dates)
-3. Set parking access and WhatsApp group status
-4. Click "Save"
-
-#### Generate AI Report
-
-1. Navigate to "Reports"
-2. Enter natural language query (e.g., "Show vacant apartments in Building 11")
-3. Click "Generate"
-4. View Markdown report or download PDF
-
-#### View Tenant History
-
-1. Find tenant in search results
-2. Click tenant name to view details
-3. Click "View History" tab
-4. See timeline of all previous tenants for that apartment
-
-**See**: [docs/USAGE.md](docs/USAGE.md) for detailed usage guide (coming soon).
-
----
-
-## Development
-
-### Project Structure
-
-```
-tenant-management/
-├── src/
-│   ├── mcp_server/       # MCP server and API
-│   ├── web_ui/           # React frontend
-│   ├── ai_agent/         # AI report generation
-│   └── database/         # Excel utilities
-├── tests/
-│   ├── unit/             # Unit tests
-│   └── integration/      # Integration tests
-├── docs/                 # Documentation
-├── data/                 # Excel database and backups
-├── config.yaml           # Application config
-└── .env                  # Environment variables
-```
-
-### Git Worktree Workflow
-
-This project uses Git worktrees for parallel development:
-
-```bash
-# Create worktree for each stage
-git worktree add worktrees/01-infrastructure 01-infrastructure
-git worktree add worktrees/02-basic-tools 02-basic-tools
-git worktree add worktrees/03-full-mcp 03-full-mcp
-git worktree add worktrees/04-communication 04-communication
-git worktree add worktrees/05-sdk-ui 05-sdk-ui
-
-# Work in each worktree independently
-cd worktrees/02-basic-tools
-# Make changes, commit, push
-```
-
-**See**: [docs/development/GIT_WORKFLOW.md](docs/development/GIT_WORKFLOW.md) for workflow details.
-
-### Code Quality
-
-Before committing:
-
-```bash
-# Linting
-pylint src/ --score=y     # Must be 10/10
-ruff check src/ tests/
-
-# Formatting
-black src/ tests/
-isort --profile black src/ tests/
-
-# Tests
-pytest tests/ --cov=src
-
-# Security
-bandit -r src/
-```
-
-**See**: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for development standards.
 
 ---
 
 ## Testing
 
-### Run All Tests
-
 ```bash
+# Run all tests
 pytest tests/ -v
-```
 
-### Run Unit Tests Only
-
-```bash
-pytest tests/unit/ -v
-```
-
-### Run with Coverage
-
-```bash
+# Run with coverage
 pytest tests/ --cov=src --cov-report=html
-open htmlcov/index.html
+
+# Run specific test file
+pytest tests/test_database.py -v
+
+# Run specific test
+pytest tests/test_sdk.py::test_create_tenant -v
 ```
 
-### Run Integration Tests
-
-```bash
-pytest tests/integration/ -v
-```
-
-### Run Specific Test
-
-```bash
-pytest tests/unit/test_tenant_service.py::test_create_tenant -v
-```
-
-**Test Coverage Target**: > 80%
+**Current Status**: 174 tests passing, 81.81% coverage
 
 ---
 
-## Deployment
+## Documentation
 
-### Local Deployment (Development)
-
-```bash
-# Start MCP server
-python -m src.mcp_server.main
-
-# Start React dev server
-cd src/web_ui && npm start
-```
-
-### Production Build
-
-```bash
-# Build React frontend
-cd src/web_ui
-npm run build
-
-# Production build in src/web_ui/build/
-```
-
-### Production Deployment (Future)
-
-- **MCP Server**: Docker container with Gunicorn/Uvicorn
-- **Frontend**: Serve static build with Nginx
-- **Database**: Consider migration to PostgreSQL
-- **HTTPS**: Enable with Let's Encrypt
-- **Monitoring**: Prometheus + Grafana
-
-**See**: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment guide (coming soon).
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-#### ModuleNotFoundError: No module named 'src'
-
-**Solution**:
-```bash
-# Install package in editable mode
-pip install -e .
-```
-
-#### Excel file not found
-
-**Solution**:
-```bash
-# Initialize database
-python -m src.database.init_db
-```
-
-#### Port 8000 already in use
-
-**Solution**:
-```bash
-# Change port in .env
-MCP_SERVER_PORT=8001
-
-# Or kill process using port
-lsof -ti:8000 | xargs kill -9  # Mac/Linux
-```
-
-#### React app not connecting to API
-
-**Solution**:
-1. Verify MCP server is running on correct port
-2. Check `REACT_APP_API_BASE_URL` in `.env`
-3. Restart React dev server after changing `.env`
-
-### Getting Help
-
-1. Check [docs/](docs/) directory for documentation
-2. Review error logs in `logs/app.log`
-3. Search existing issues on GitHub
-4. Open new issue with error details
-
----
-
-## Contributing
-
-We welcome contributions! Please see [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
-- Code of conduct
-- Development setup
-- Coding standards
-- Pull request process
-- Testing requirements
+| Document | Description |
+|----------|-------------|
+| [Architecture.md](docs/Architecture.md) | System architecture and design decisions |
+| [PRD.md](docs/PRD.md) | Product requirements document |
+| [CONFIG.md](docs/CONFIG.md) | Configuration reference |
+| [EXAMPLE.md](docs/EXAMPLE.md) | Comprehensive usage examples |
+| [PROMPT_BOOK.md](docs/PROMPT_BOOK.md) | AI prompt templates |
+| [EXTENSIBILITY.md](docs/EXTENSIBILITY.md) | Extension guide |
+| [COSTS.md](docs/COSTS.md) | Cost analysis |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guidelines |
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## Acknowledgments
+## Version History
 
-- **MCP Protocol**: [Model Context Protocol](https://modelcontextprotocol.io/)
-- **Excel Library**: [openpyxl](https://openpyxl.readthedocs.io/)
-- **AI Model**: [Anthropic Claude](https://www.anthropic.com/)
-- **React**: [React Documentation](https://react.dev/)
-
----
-
-## Contact
-
-For questions or support:
-- **Issues**: [GitHub Issues](https://github.com/yourusername/tenant-management/issues)
-- **Email**: support@example.com (update with actual contact)
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.1.0 | 2026-01-11 | Enhanced UI, family members, AI reports, comprehensive documentation |
+| 1.0.0 | 2026-01-10 | Initial release with core features |
 
 ---
 
-**Version**: 1.1.0
-**Last Updated**: 2026-01-11
-
-### Recent Changes (v1.1.0)
-
-- Enhanced UI with building-themed design (SVG icons, gradient backgrounds, animated occupancy bars)
-- Added interactive floor map visualization for each building
-- Implemented family member management with WhatsApp/PalGate access controls
-- Added comprehensive validation for names, phones, and vehicle plates
-- Improved tenant registration with owner info for renters
-- Fixed dashboard occupancy statistics and SDK response parsing
+**Built with**: Python 3.10+ | FastAPI | openpyxl | OpenAI | Pydantic
