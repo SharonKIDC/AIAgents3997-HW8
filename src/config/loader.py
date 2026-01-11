@@ -58,16 +58,18 @@ class ConfigLoader:
 
     def _apply_env_overrides(self) -> None:
         """Apply environment variable overrides to configuration."""
-        # Override sensitive values from environment
-        if "database" in self._config:
-            backup_path = os.getenv("BACKUP_PATH")
-            if backup_path:
-                self._config["database"]["backup_path"] = backup_path
+        self._config = self._substitute_env_vars(self._config)
 
-        if "api" in self._config:
-            anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-            if anthropic_key:
-                self._config["api"]["anthropic_api_key"] = anthropic_key
+    def _substitute_env_vars(self, obj: Any) -> Any:
+        """Recursively substitute ${VAR} patterns with environment variables."""
+        if isinstance(obj, dict):
+            return {k: self._substitute_env_vars(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._substitute_env_vars(item) for item in obj]
+        elif isinstance(obj, str) and obj.startswith("${") and obj.endswith("}"):
+            var_name = obj[2:-1]
+            return os.getenv(var_name, obj)
+        return obj
 
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value by key.
