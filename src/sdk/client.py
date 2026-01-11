@@ -3,9 +3,9 @@
 Provides a clean, typed interface for all tenant management operations.
 """
 
-from datetime import date
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from datetime import date
+from typing import Any
 
 from src.communication import MCPHttpClient, MCPResponse
 from src.exceptions import ValidationError
@@ -21,10 +21,10 @@ class TenantInfo:
     last_name: str
     phone: str
     is_owner: bool
-    move_in_date: Optional[date] = None
-    storage_number: Optional[int] = None
-    parking_slot_1: Optional[int] = None
-    parking_slot_2: Optional[int] = None
+    move_in_date: date | None = None
+    storage_number: int | None = None
+    parking_slot_1: int | None = None
+    parking_slot_2: int | None = None
 
     @property
     def full_name(self) -> str:
@@ -60,7 +60,7 @@ class TenantSDK:
         is_owner: bool = True,
         move_in_date: date = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new tenant."""
         params = {
             "building_number": building,
@@ -77,7 +77,7 @@ class TenantSDK:
             raise ValidationError(response.error or "Failed to create tenant")
         return response.data
 
-    def get_tenant(self, building: int, apartment: int) -> Optional[TenantInfo]:
+    def get_tenant(self, building: int, apartment: int) -> TenantInfo | None:
         """Get tenant information for an apartment."""
         response = self._client.invoke_tool(
             "get_tenant", {"building_number": building, "apartment_number": apartment}
@@ -105,7 +105,7 @@ class TenantSDK:
             parking_slot_2=tenant_data.get("parking_slot_2"),
         )
 
-    def update_tenant(self, building: int, apartment: int, **updates) -> Dict[str, Any]:
+    def update_tenant(self, building: int, apartment: int, **updates) -> dict[str, Any]:
         """Update tenant information."""
         params = {"building_number": building, "apartment_number": apartment, **updates}
         response = self._client.invoke_tool("update_tenant", params)
@@ -115,7 +115,7 @@ class TenantSDK:
 
     def end_tenancy(
         self, building: int, apartment: int, move_out_date: date = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """End a tenancy (move out)."""
         params = {
             "building_number": building,
@@ -127,7 +127,7 @@ class TenantSDK:
             raise ValidationError(response.error or "Failed to end tenancy")
         return response.data
 
-    def get_buildings(self) -> List[BuildingInfo]:
+    def get_buildings(self) -> list[BuildingInfo]:
         """Get list of all buildings with occupancy info."""
         response = self._client.get_resource("/buildings")
         if response.is_error():
@@ -138,7 +138,7 @@ class TenantSDK:
             for b in buildings
         ]
 
-    def get_building_occupancy(self, building: int) -> Optional[BuildingInfo]:
+    def get_building_occupancy(self, building: int) -> BuildingInfo | None:
         """Get occupancy statistics for a building."""
         response = self._client.get_resource(f"/buildings/{building}")
         if response.is_error():
@@ -157,7 +157,7 @@ class TenantSDK:
             occupancy_rate=occupancy_data.get("occupancy_rate", 0.0),
         )
 
-    def get_all_tenants(self, building: int = None) -> List[Dict[str, Any]]:
+    def get_all_tenants(self, building: int = None) -> list[dict[str, Any]]:
         """Get all tenants, optionally filtered by building."""
         params = {"building": building} if building else None
         response = self._client.get_resource("/tenants", params=params)
@@ -165,7 +165,7 @@ class TenantSDK:
             return []
         return response.data.get("tenants", [])
 
-    def get_tenant_history(self, building: int, apartment: int) -> List[Dict[str, Any]]:
+    def get_tenant_history(self, building: int, apartment: int) -> list[dict[str, Any]]:
         """Get tenant history for an apartment."""
         response = self._client.get_resource(f"/tenants/{building}/{apartment}/history")
         if response.is_error():

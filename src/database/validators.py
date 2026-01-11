@@ -4,8 +4,8 @@ Provides validation logic for buildings, apartments, and tenant data.
 All validation rules are configuration-driven with no hardcoded values.
 """
 
-from typing import Dict, Any, List, Tuple
 from datetime import date
+from typing import Any
 
 from src.config import get_config
 from src.exceptions import ValidationError
@@ -19,7 +19,7 @@ class DataValidator:
         self._config = get_config()
         self._buildings_config = self._config.get("buildings", [])
 
-    def get_valid_building_numbers(self) -> List[int]:
+    def get_valid_building_numbers(self) -> list[int]:
         """Get list of valid building numbers from configuration."""
         return sorted([bldg.get("number", 0) for bldg in self._buildings_config])
 
@@ -80,7 +80,7 @@ class DataValidator:
                 raise ValidationError("Parking slot cannot be empty string", {"slot": slot})
         return True
 
-    def validate_tenant_data(self, data: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    def validate_tenant_data(self, data: dict[str, Any]) -> tuple[bool, list[str]]:
         """Validate complete tenant data dictionary."""
         errors = []
         try:

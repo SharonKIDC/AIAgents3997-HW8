@@ -3,19 +3,19 @@
 Provides HTTP-based communication with the MCP server using requests library.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Any
 
 import requests
 
-from src.config import get_config
-from src.exceptions import CommunicationError
 from src.communication.base import (
     BaseMCPClient,
     MCPResponse,
-    ToolDefinition,
-    ResourceDefinition,
     PromptDefinition,
+    ResourceDefinition,
+    ToolDefinition,
 )
+from src.config import get_config
+from src.exceptions import CommunicationError
 
 
 class MCPHttpClient(BaseMCPClient):
@@ -32,8 +32,8 @@ class MCPHttpClient(BaseMCPClient):
         self,
         method: str,
         endpoint: str,
-        json_data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
+        json_data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> MCPResponse:
         """Make HTTP request to MCP server."""
         url = f"{self._base_url}{endpoint}"
@@ -57,7 +57,7 @@ class MCPHttpClient(BaseMCPClient):
         """Get server information."""
         return self._request("GET", "/")
 
-    def list_tools(self) -> List[ToolDefinition]:
+    def list_tools(self) -> list[ToolDefinition]:
         """List available tools."""
         response = self._request("GET", "/tools")
         if response.is_error():
@@ -70,12 +70,12 @@ class MCPHttpClient(BaseMCPClient):
             for t in tools
         ]
 
-    def invoke_tool(self, name: str, arguments: Dict[str, Any]) -> MCPResponse:
+    def invoke_tool(self, name: str, arguments: dict[str, Any]) -> MCPResponse:
         """Invoke a tool with arguments."""
         payload = {"name": name, "arguments": arguments}
         return self._request("POST", "/tools/invoke", json_data=payload)
 
-    def list_resources(self) -> List[ResourceDefinition]:
+    def list_resources(self) -> list[ResourceDefinition]:
         """List available resources."""
         response = self._request("GET", "/resources")
         if response.is_error():
@@ -86,12 +86,12 @@ class MCPHttpClient(BaseMCPClient):
             for r in resources
         ]
 
-    def get_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> MCPResponse:
+    def get_resource(self, uri: str, params: dict[str, Any] | None = None) -> MCPResponse:
         """Get a resource by URI."""
         endpoint = f"/resources{uri}" if uri.startswith("/") else f"/resources/{uri}"
         return self._request("GET", endpoint, params=params)
 
-    def list_prompts(self) -> List[PromptDefinition]:
+    def list_prompts(self) -> list[PromptDefinition]:
         """List available prompts."""
         response = self._request("GET", "/prompts")
         if response.is_error():
@@ -104,7 +104,7 @@ class MCPHttpClient(BaseMCPClient):
             for p in prompts
         ]
 
-    def generate_prompt(self, name: str, arguments: Dict[str, Any]) -> MCPResponse:
+    def generate_prompt(self, name: str, arguments: dict[str, Any]) -> MCPResponse:
         """Generate a prompt with arguments."""
         return self._request(
             "POST", "/prompts/generate", json_data={"name": name, "arguments": arguments}

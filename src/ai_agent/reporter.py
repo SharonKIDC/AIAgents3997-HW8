@@ -4,9 +4,9 @@ Uses MCP prompts and OpenAI API to generate formatted reports.
 """
 
 import os
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any
 
 from openai import OpenAI
 
@@ -20,21 +20,21 @@ class ReportResult:
 
     content: str
     format: str = "markdown"
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class LLMProvider(ABC):
     """Abstract base class for LLM providers."""
 
     @abstractmethod
-    def generate(self, messages: List[Dict[str, Any]]) -> str:
+    def generate(self, messages: list[dict[str, Any]]) -> str:
         """Generate response from messages."""
 
 
 class MockLLMProvider(LLMProvider):
     """Mock LLM provider for testing."""
 
-    def generate(self, messages: List[Dict[str, Any]]) -> str:
+    def generate(self, messages: list[dict[str, Any]]) -> str:
         """Generate mock response."""
         user_msg = next((m for m in messages if m.get("role") == "user"), None)
         if not user_msg:
@@ -53,7 +53,7 @@ class OpenAIProvider(LLMProvider):
         self._model = model or os.getenv("AI_MODEL_NAME", "gpt-4o")
         self._client = OpenAI(api_key=self._api_key)
 
-    def generate(self, messages: List[Dict[str, Any]]) -> str:
+    def generate(self, messages: list[dict[str, Any]]) -> str:
         """Generate response using OpenAI API."""
         formatted_messages = []
         for msg in messages:

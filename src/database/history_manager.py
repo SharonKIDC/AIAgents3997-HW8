@@ -5,13 +5,12 @@ including creating history entries and querying past tenants.
 """
 
 from datetime import date
-from typing import List
 
 from openpyxl import load_workbook
 
 from src.config import get_config
-from src.exceptions import DatabaseError
 from src.database.models import TenantHistory
+from src.exceptions import DatabaseError
 
 
 class HistoryManager:
@@ -61,7 +60,7 @@ class HistoryManager:
         worksheet.cell(row, 10).value = history.owner_last_name
         worksheet.cell(row, 11).value = history.owner_phone
 
-    def get_apartment_history(self, building: int, apartment: int) -> List[TenantHistory]:
+    def get_apartment_history(self, building: int, apartment: int) -> list[TenantHistory]:
         """Get history of all tenants for an apartment."""
         workbook = self._load_workbook()
         worksheet = workbook[self.HISTORY_SHEET]
@@ -74,7 +73,7 @@ class HistoryManager:
                 history.append(self._row_to_history(worksheet, row))
         return sorted(history, key=lambda h: h.move_in_date, reverse=True)
 
-    def get_building_history(self, building: int) -> List[TenantHistory]:
+    def get_building_history(self, building: int) -> list[TenantHistory]:
         """Get history of all tenants for a building."""
         workbook = self._load_workbook()
         worksheet = workbook[self.HISTORY_SHEET]

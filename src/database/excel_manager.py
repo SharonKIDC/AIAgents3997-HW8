@@ -4,19 +4,17 @@ Provides read/write operations for the Excel-based data store.
 Uses openpyxl for Excel file manipulation with proper locking.
 """
 
-import os
+import json
 from datetime import date, datetime
 from pathlib import Path
-from typing import List, Optional, Dict, Any
-import json
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from src.config import get_config
-from src.exceptions import DatabaseError, NotFoundError
-from src.database.models import Tenant, TenantHistory, Building
+from src.database.models import Building, Tenant
 from src.database.validators import DataValidator
+from src.exceptions import DatabaseError
 
 
 class ExcelManager:
@@ -112,7 +110,7 @@ class ExcelManager:
         """Convert date to string for storage."""
         return d.isoformat() if d else ""
 
-    def _str_to_date(self, s: str) -> Optional[date]:
+    def _str_to_date(self, s: str) -> date | None:
         """Convert string to date from storage."""
         if not s:
             return None
@@ -122,7 +120,7 @@ class ExcelManager:
             return s
         return date.fromisoformat(str(s))
 
-    def get_tenant(self, building: int, apartment: int) -> Optional[Tenant]:
+    def get_tenant(self, building: int, apartment: int) -> Tenant | None:
         """Get active tenant for an apartment."""
         wb = self._load_workbook()
         ws = wb[self.TENANTS_SHEET]

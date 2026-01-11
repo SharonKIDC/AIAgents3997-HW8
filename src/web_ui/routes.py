@@ -5,20 +5,19 @@ Provides REST endpoints optimized for the React UI components.
 
 import re
 from datetime import date, timedelta
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel
 
-from src.sdk import TenantSDK
 from src.config import get_config
 from src.exceptions import ValidationError
-
+from src.sdk import TenantSDK
 
 router = APIRouter(prefix="/api", tags=["web-ui"])
 
 
-def _get_validation_config() -> Dict[str, Any]:
+def _get_validation_config() -> dict[str, Any]:
     """Get validation configuration."""
     config = get_config()
     return {
@@ -64,7 +63,7 @@ def _get_validation_config() -> Dict[str, Any]:
     }
 
 
-def _validate_name(name: str, field_name: str, config: Dict) -> List[str]:
+def _validate_name(name: str, field_name: str, config: dict) -> list[str]:
     """Validate a name field and return errors."""
     errors = []
     name_config = config["name"]
@@ -79,7 +78,7 @@ def _validate_name(name: str, field_name: str, config: Dict) -> List[str]:
     return errors
 
 
-def _validate_phone(phone: str, field_name: str, config: Dict) -> List[str]:
+def _validate_phone(phone: str, field_name: str, config: dict) -> list[str]:
     """Validate a phone field and return errors."""
     errors = []
     phone_config = config["phone"]
@@ -94,7 +93,7 @@ def _validate_phone(phone: str, field_name: str, config: Dict) -> List[str]:
     return errors
 
 
-def _validate_vehicle_plate(plate: str, config: Dict) -> List[str]:
+def _validate_vehicle_plate(plate: str, config: dict) -> list[str]:
     """Validate vehicle plate and return errors."""
     if not plate:
         return []
@@ -118,7 +117,7 @@ class FamilyMember(BaseModel):
     phone: str
     whatsapp_enabled: bool = False
     palgate_enabled: bool = False
-    vehicle_plate: Optional[str] = None
+    vehicle_plate: str | None = None
 
 
 class OwnerInfoCreate(BaseModel):
@@ -138,29 +137,29 @@ class TenantCreate(BaseModel):
     last_name: str
     phone: str
     is_owner: bool = True
-    owner_info: Optional[OwnerInfoCreate] = None
-    move_in_date: Optional[str] = None
-    storage_number: Optional[int] = None
-    parking_slot_1: Optional[int] = None
-    parking_slot_2: Optional[int] = None
-    family_members: List[FamilyMember] = []
+    owner_info: OwnerInfoCreate | None = None
+    move_in_date: str | None = None
+    storage_number: int | None = None
+    parking_slot_1: int | None = None
+    parking_slot_2: int | None = None
+    family_members: list[FamilyMember] = []
     replace_existing: bool = False
 
 
 class TenantUpdate(BaseModel):
     """Request model for tenant updates."""
 
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    phone: Optional[str] = None
-    is_owner: Optional[bool] = None
-    owner_info: Optional[OwnerInfoCreate] = None
-    storage_number: Optional[int] = None
-    parking_slot_1: Optional[int] = None
-    parking_slot_2: Optional[int] = None
-    whatsapp_group_enabled: Optional[bool] = None
-    palgate_access_enabled: Optional[bool] = None
-    family_members: Optional[List[FamilyMember]] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+    is_owner: bool | None = None
+    owner_info: OwnerInfoCreate | None = None
+    storage_number: int | None = None
+    parking_slot_1: int | None = None
+    parking_slot_2: int | None = None
+    whatsapp_group_enabled: bool | None = None
+    palgate_access_enabled: bool | None = None
+    family_members: list[FamilyMember] | None = None
 
 
 def _get_sdk() -> TenantSDK:
@@ -168,10 +167,10 @@ def _get_sdk() -> TenantSDK:
     return TenantSDK()
 
 
-def _validate_tenant_data(tenant: TenantCreate) -> Dict[str, List[str]]:
+def _validate_tenant_data(tenant: TenantCreate) -> dict[str, list[str]]:
     """Validate tenant data and return field-specific errors."""
     config = _get_validation_config()
-    errors: Dict[str, List[str]] = {}
+    errors: dict[str, list[str]] = {}
 
     # Validate tenant name
     first_name_errors = _validate_name(tenant.first_name, "First name", config)
@@ -263,21 +262,25 @@ async def list_buildings():
                 # Get occupancy data for each building
                 occupancy = sdk.get_building_occupancy(b.number)
                 if occupancy:
-                    result.append({
-                        "number": occupancy.number,
-                        "total_apartments": occupancy.total_apartments,
-                        "occupied": occupancy.occupied,
-                        "vacant": occupancy.vacant,
-                        "occupancy_rate": occupancy.occupancy_rate,
-                    })
+                    result.append(
+                        {
+                            "number": occupancy.number,
+                            "total_apartments": occupancy.total_apartments,
+                            "occupied": occupancy.occupied,
+                            "vacant": occupancy.vacant,
+                            "occupancy_rate": occupancy.occupancy_rate,
+                        }
+                    )
                 else:
-                    result.append({
-                        "number": b.number,
-                        "total_apartments": b.total_apartments,
-                        "occupied": 0,
-                        "vacant": b.total_apartments,
-                        "occupancy_rate": 0.0,
-                    })
+                    result.append(
+                        {
+                            "number": b.number,
+                            "total_apartments": b.total_apartments,
+                            "occupied": 0,
+                            "vacant": b.total_apartments,
+                            "occupancy_rate": 0.0,
+                        }
+                    )
             return {"buildings": result}
     except Exception:
         # Return empty list if MCP server is unavailable
@@ -342,29 +345,24 @@ async def get_building_floor_map(building_number: int):
     for floor in sorted(floors_config, key=lambda f: f.get("level", 0), reverse=True):
         level = floor.get("level", 0)
         apartments = floor.get("apartments", [])
-        floor_data = {
-            "level": level,
-            "apartments": []
-        }
+        floor_data = {"level": level, "apartments": []}
         for apt_num in apartments:
             tenant = tenant_map.get(apt_num)
-            floor_data["apartments"].append({
-                "apartment_number": apt_num,
-                "occupied": tenant is not None,
-                "tenant": tenant
-            })
+            floor_data["apartments"].append(
+                {"apartment_number": apt_num, "occupied": tenant is not None, "tenant": tenant}
+            )
         floor_map.append(floor_data)
 
     return {
         "building_number": building_number,
         "total_apartments": building_config.get("total_apartments", 0),
         "total_floors": len(floors_config),
-        "floors": floor_map
+        "floors": floor_map,
     }
 
 
 @router.get("/tenants")
-async def list_tenants(building: Optional[int] = Query(None)):
+async def list_tenants(building: int | None = Query(None)):
     """Get all tenants, optionally filtered by building."""
     with _get_sdk() as sdk:
         tenants = sdk.get_all_tenants(building)
@@ -529,7 +527,7 @@ async def get_tenant_history(building: int, apartment: int):
 
 
 @router.get("/reports/occupancy")
-async def get_occupancy_report(building: Optional[int] = Query(None)):
+async def get_occupancy_report(building: int | None = Query(None)):
     """Generate occupancy report prompt for AI."""
     with _get_sdk() as sdk:
         response = sdk.get_occupancy_report(building)
@@ -540,7 +538,7 @@ async def get_occupancy_report(building: Optional[int] = Query(None)):
 
 @router.get("/reports/tenant-list")
 async def get_tenant_list_report(
-    building: Optional[int] = Query(None), include_contacts: bool = Query(False)
+    building: int | None = Query(None), include_contacts: bool = Query(False)
 ):
     """Generate tenant list report prompt for AI."""
     with _get_sdk() as sdk:
@@ -554,7 +552,7 @@ class AIQueryRequest(BaseModel):
     """Request model for AI query."""
 
     query: str
-    building: Optional[int] = None
+    building: int | None = None
 
 
 @router.post("/query")
@@ -592,7 +590,7 @@ async def process_ai_query(request: AIQueryRequest):
         return {"success": False, "error": str(e)}
 
 
-def _build_query_context(tenants: List, buildings: List, building_filter: Optional[int]) -> str:
+def _build_query_context(tenants: list, buildings: list, building_filter: int | None) -> str:
     """Build context string from tenant and building data."""
     lines = []
 

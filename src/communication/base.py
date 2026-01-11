@@ -5,7 +5,7 @@ Defines interfaces and data models for MCP server communication.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
+from typing import Any
 
 
 @dataclass
@@ -13,8 +13,8 @@ class MCPResponse:
     """Standard response from MCP server."""
 
     success: bool
-    data: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    data: dict[str, Any] | None = None
+    error: str | None = None
     status_code: int = 200
 
     def is_error(self) -> bool:
@@ -28,7 +28,7 @@ class ToolDefinition:
 
     name: str
     description: str
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -46,7 +46,7 @@ class PromptDefinition:
 
     name: str
     description: str
-    arguments: List[Dict[str, Any]] = field(default_factory=list)
+    arguments: list[dict[str, Any]] = field(default_factory=list)
 
 
 class BaseMCPClient(ABC):
@@ -57,25 +57,25 @@ class BaseMCPClient(ABC):
         """Get server information."""
 
     @abstractmethod
-    def list_tools(self) -> List[ToolDefinition]:
+    def list_tools(self) -> list[ToolDefinition]:
         """List available tools."""
 
     @abstractmethod
-    def invoke_tool(self, name: str, arguments: Dict[str, Any]) -> MCPResponse:
+    def invoke_tool(self, name: str, arguments: dict[str, Any]) -> MCPResponse:
         """Invoke a tool with arguments."""
 
     @abstractmethod
-    def list_resources(self) -> List[ResourceDefinition]:
+    def list_resources(self) -> list[ResourceDefinition]:
         """List available resources."""
 
     @abstractmethod
-    def get_resource(self, uri: str, params: Optional[Dict[str, Any]] = None) -> MCPResponse:
+    def get_resource(self, uri: str, params: dict[str, Any] | None = None) -> MCPResponse:
         """Get a resource by URI."""
 
     @abstractmethod
-    def list_prompts(self) -> List[PromptDefinition]:
+    def list_prompts(self) -> list[PromptDefinition]:
         """List available prompts."""
 
     @abstractmethod
-    def generate_prompt(self, name: str, arguments: Dict[str, Any]) -> MCPResponse:
+    def generate_prompt(self, name: str, arguments: dict[str, Any]) -> MCPResponse:
         """Generate a prompt with arguments."""

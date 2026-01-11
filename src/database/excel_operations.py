@@ -4,16 +4,15 @@ Extended operations for the Excel-based data store including
 create, update, delete, and history management.
 """
 
-from datetime import date
-from typing import List
 import json
+from datetime import date
 
 from openpyxl import load_workbook
 
 from src.config import get_config
-from src.exceptions import DatabaseError, NotFoundError, ValidationError
 from src.database.models import Tenant, TenantHistory
 from src.database.validators import DataValidator
+from src.exceptions import DatabaseError, NotFoundError, ValidationError
 
 
 class ExcelOperations:
@@ -152,14 +151,14 @@ class ExcelOperations:
         ws.cell(row, 10).value = history.owner_last_name
         ws.cell(row, 11).value = history.owner_phone
 
-    def get_all_tenants(self, building: int = None) -> List[Tenant]:
+    def get_all_tenants(self, building: int = None) -> list[Tenant]:
         """Get all active tenants, optionally filtered by building."""
         from src.database.queries import TenantQueries
 
         queries = TenantQueries(self._db_path)
         return queries.get_all_tenants(building)
 
-    def get_tenant_history(self, building: int, apartment: int) -> List[TenantHistory]:
+    def get_tenant_history(self, building: int, apartment: int) -> list[TenantHistory]:
         """Get history of all tenants for an apartment."""
         from src.database.history_manager import HistoryManager
 

@@ -46,20 +46,22 @@ This system centralizes tenant management for residential complexes with multipl
 ### Core Features
 
 - **Multi-Building Management**: Support for buildings 11, 13, 15, 17 with varying apartment counts
-- **Tenant Registration**: Track owner, tenant, move-in/move-out dates, parking, WhatsApp groups
+- **Tenant Registration**: Track owner/renter status, move-in/move-out dates, parking slots, storage units
+- **Family Members**: Track family members with WhatsApp group and PalGate access permissions
 - **Historical Data**: Complete tenant history per apartment (never overwritten)
 - **AI Reports**: Natural language queries generate Markdown and PDF reports
-- **Search & Filter**: Quick search by tenant name, building, parking status, WhatsApp membership
-- **Dashboard**: Occupancy overview, vacancy tracking, quick statistics
+- **Search & Filter**: Quick search by tenant name, building, parking status
+- **Interactive Dashboard**: Visual occupancy overview with building icons, floor maps, and statistics
+- **Floor Map Visualization**: Click on buildings to view detailed floor-by-floor apartment status
 
 ### Technical Features
 
 - **Excel Database**: Simple XLSX storage with automatic backups
-- **MCP Server**: Abstraction layer for database operations
-- **React UI**: Responsive web interface (desktop and tablet)
+- **MCP Server**: FastAPI-based abstraction layer for database operations
+- **React UI**: Responsive web interface with building-themed design and SVG visualizations
+- **Configurable Validation**: Phone, name, and vehicle plate patterns configurable in YAML
 - **5-Stage Architecture**: Infrastructure → Tools → MCP → Communication → UI
-- **Git Worktrees**: Parallel development workflow
-- **No Hardcoded Values**: All configuration externalized
+- **No Hardcoded Values**: All configuration externalized to config.yaml and .env
 
 ---
 
@@ -493,5 +495,14 @@ For questions or support:
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2026-01-10
+**Version**: 1.1.0
+**Last Updated**: 2026-01-11
+
+### Recent Changes (v1.1.0)
+
+- Enhanced UI with building-themed design (SVG icons, gradient backgrounds, animated occupancy bars)
+- Added interactive floor map visualization for each building
+- Implemented family member management with WhatsApp/PalGate access controls
+- Added comprehensive validation for names, phones, and vehicle plates
+- Improved tenant registration with owner info for renters
+- Fixed dashboard occupancy statistics and SDK response parsing

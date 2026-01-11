@@ -1,14 +1,14 @@
 """Tests for web UI backend."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from datetime import date
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 
-from src.web_ui.backend import create_web_app
-from src.sdk.client import TenantInfo, BuildingInfo
 from src.communication import MCPResponse
+from src.sdk.client import BuildingInfo, TenantInfo
+from src.web_ui.backend import create_web_app
 
 
 @pytest.fixture

@@ -1,11 +1,12 @@
 """Tests for communication layer."""
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 import requests
 
-from src.communication import BaseMCPClient, MCPResponse, MCPHttpClient
-from src.communication.base import ToolDefinition, ResourceDefinition, PromptDefinition
+from src.communication import MCPHttpClient, MCPResponse
+from src.communication.base import PromptDefinition, ResourceDefinition, ToolDefinition
 from src.exceptions import CommunicationError
 
 

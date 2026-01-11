@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from src.database.models import Building, Tenant, TenantHistory, OwnerInfo
-from src.database.validators import DataValidator
 from src.database.excel_manager import ExcelManager
 from src.database.excel_operations import ExcelOperations
+from src.database.models import Building, OwnerInfo, Tenant, TenantHistory
+from src.database.validators import DataValidator
 from src.exceptions import ValidationError
 
 

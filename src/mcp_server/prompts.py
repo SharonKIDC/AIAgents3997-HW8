@@ -4,14 +4,14 @@ Provides structured templates for guiding AI model in generating
 tenant management reports.
 """
 
-from typing import Dict, Any
+from typing import Any
 
 from src.database import Building
 from src.mcp_server.prompt_templates import (
-    OCCUPANCY_TEMPLATE,
-    TENANT_LIST_TEMPLATE,
     HISTORY_TEMPLATE,
+    OCCUPANCY_TEMPLATE,
     SYSTEM_PROMPT_TEMPLATE,
+    TENANT_LIST_TEMPLATE,
 )
 
 
@@ -67,7 +67,7 @@ class ReportPrompts:
         ]
 
     @staticmethod
-    def get_occupancy_prompt(building: int = None) -> Dict[str, Any]:
+    def get_occupancy_prompt(building: int = None) -> dict[str, Any]:
         """Get prompt for occupancy report."""
         if building:
             context = f"Generate occupancy report for building {building}."
@@ -79,7 +79,7 @@ class ReportPrompts:
     @staticmethod
     def get_tenant_list_prompt(
         building: int = None, include_contacts: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get prompt for tenant list report."""
         if building:
             context = f"Generate tenant list for building {building}."
@@ -90,13 +90,13 @@ class ReportPrompts:
         return {"messages": [{"role": "user", "content": {"type": "text", "text": text}}]}
 
     @staticmethod
-    def get_history_prompt(building: int, apartment: int) -> Dict[str, Any]:
+    def get_history_prompt(building: int, apartment: int) -> dict[str, Any]:
         """Get prompt for tenant history report."""
         text = HISTORY_TEMPLATE.format(building=building, apartment=apartment)
         return {"messages": [{"role": "user", "content": {"type": "text", "text": text}}]}
 
     @staticmethod
-    def get_custom_query_prompt(query: str) -> Dict[str, Any]:
+    def get_custom_query_prompt(query: str) -> dict[str, Any]:
         """Get prompt for custom natural language query."""
         buildings = Building.get_all_buildings()
         building_info = ", ".join(

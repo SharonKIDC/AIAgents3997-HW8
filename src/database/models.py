@@ -5,7 +5,8 @@ All models use configuration-driven validation with no hardcoded values.
 """
 
 from datetime import date
-from typing import Optional, List
+from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 from src.config import get_config
@@ -46,7 +47,7 @@ class PalGateMember(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
     phone: str = Field(..., min_length=9, max_length=20)
-    vehicle_plate: Optional[str] = Field(None, max_length=20)
+    vehicle_plate: str | None = Field(None, max_length=20)
 
 
 class Building(BaseModel):
@@ -56,7 +57,7 @@ class Building(BaseModel):
     total_apartments: int
 
     @classmethod
-    def get_all_buildings(cls) -> List["Building"]:
+    def get_all_buildings(cls) -> list["Building"]:
         """Get all buildings from configuration."""
         config = get_config()
         buildings_config = config.get("buildings", [])
@@ -86,16 +87,16 @@ class Tenant(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
     phone: str = Field(..., min_length=9, max_length=20)
-    storage_number: Optional[str] = None
-    parking_slot_1: Optional[str] = None
-    parking_slot_2: Optional[str] = None
+    storage_number: str | None = None
+    parking_slot_1: str | None = None
+    parking_slot_2: str | None = None
     is_owner: bool = True
-    owner_info: Optional[OwnerInfo] = None
-    whatsapp_members: List[WhatsAppMember] = Field(default_factory=list)
-    parking_authorizations: List[ParkingAuthorization] = Field(default_factory=list)
-    palgate_members: List["PalGateMember"] = Field(default_factory=list)
+    owner_info: OwnerInfo | None = None
+    whatsapp_members: list[WhatsAppMember] = Field(default_factory=list)
+    parking_authorizations: list[ParkingAuthorization] = Field(default_factory=list)
+    palgate_members: list["PalGateMember"] = Field(default_factory=list)
     move_in_date: date = Field(default_factory=date.today)
-    move_out_date: Optional[date] = None
+    move_out_date: date | None = None
     palgate_access_enabled: bool = False
     whatsapp_group_enabled: bool = False
 
@@ -140,9 +141,9 @@ class TenantHistory(BaseModel):
     move_in_date: date
     move_out_date: date
     was_owner: bool
-    owner_first_name: Optional[str] = None
-    owner_last_name: Optional[str] = None
-    owner_phone: Optional[str] = None
+    owner_first_name: str | None = None
+    owner_last_name: str | None = None
+    owner_phone: str | None = None
 
     @property
     def full_name(self) -> str:

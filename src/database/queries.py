@@ -4,13 +4,11 @@ Provides read-only query operations for retrieving tenant data
 from the Excel database without modifications.
 """
 
-from typing import List, Optional
-
 from openpyxl import load_workbook
 
 from src.config import get_config
+from src.database.models import Building, Tenant
 from src.exceptions import DatabaseError
-from src.database.models import Tenant, Building
 
 
 class TenantQueries:
@@ -30,7 +28,7 @@ class TenantQueries:
         except Exception as e:
             raise DatabaseError(f"Failed to load database: {e}") from e
 
-    def get_all_tenants(self, building: int = None) -> List[Tenant]:
+    def get_all_tenants(self, building: int = None) -> list[Tenant]:
         """Get all active tenants, optionally filtered by building."""
         from src.database.excel_manager import ExcelManager
 
@@ -44,7 +42,7 @@ class TenantQueries:
                     tenants.append(manager._row_to_tenant(worksheet, row))
         return tenants
 
-    def get_tenant(self, building: int, apartment: int) -> Optional[Tenant]:
+    def get_tenant(self, building: int, apartment: int) -> Tenant | None:
         """Get active tenant for a specific apartment."""
         from src.database.excel_manager import ExcelManager
 
@@ -67,14 +65,14 @@ class TenantQueries:
             "occupancy_rate": round(occupied / total * 100, 1) if total > 0 else 0,
         }
 
-    def get_all_buildings_occupancy(self) -> List[dict]:
+    def get_all_buildings_occupancy(self) -> list[dict]:
         """Get occupancy statistics for all buildings."""
         buildings = Building.get_all_buildings()
         return [self.get_building_occupancy(b.number) for b in buildings]
 
     def search_tenants(
         self, name: str = None, phone: str = None, building: int = None
-    ) -> List[Tenant]:
+    ) -> list[Tenant]:
         """Search tenants by name, phone, or building."""
         tenants = self.get_all_tenants(building)
         results = []
@@ -89,7 +87,7 @@ class TenantQueries:
             results.append(tenant)
         return results
 
-    def get_whatsapp_contacts(self, building: int = None) -> List[dict]:
+    def get_whatsapp_contacts(self, building: int = None) -> list[dict]:
         """Get phone numbers for WhatsApp group management."""
         tenants = self.get_all_tenants(building)
         contacts = []
@@ -114,7 +112,7 @@ class TenantQueries:
                     )
         return contacts
 
-    def get_parking_authorizations(self, building: int = None) -> List[dict]:
+    def get_parking_authorizations(self, building: int = None) -> list[dict]:
         """Get parking authorization list."""
         tenants = self.get_all_tenants(building)
         authorizations = []

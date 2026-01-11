@@ -3,16 +3,15 @@
 Converts Markdown reports to PDF format using reportlab.
 """
 
-from io import BytesIO
-from typing import Optional
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
+from io import BytesIO
 
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 
 @dataclass
@@ -117,7 +116,7 @@ class PDFGenerator:
         text = re.sub(r"`(.+?)`", r"\1", text)
         return text
 
-    def _create_table(self, lines: list) -> Optional[Table]:
+    def _create_table(self, lines: list) -> Table | None:
         """Create table from Markdown table lines."""
         if len(lines) < 2:
             return Spacer(1, 0.2 * cm)

@@ -5,15 +5,15 @@ Each tool is defined with identifier, description, and JSON schema.
 """
 
 from datetime import date
-from typing import Dict, Any, Optional
+from typing import Any
 
 from src.database import (
-    Tenant,
-    OwnerInfo,
-    ExcelOperations,
-    ExcelManager,
-    TenantQueries,
     DataValidator,
+    ExcelManager,
+    ExcelOperations,
+    OwnerInfo,
+    Tenant,
+    TenantQueries,
 )
 from src.exceptions import NotFoundError
 
@@ -103,7 +103,7 @@ class TenantTools:
             },
         ]
 
-    def create_tenant(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def create_tenant(self, params: dict[str, Any]) -> dict[str, Any]:
         """Create a new tenant."""
         owner_info = None
         if not params.get("is_owner", True) and params.get("owner_info"):
@@ -124,7 +124,7 @@ class TenantTools:
         created = self._operations.create_tenant(tenant)
         return {"success": True, "tenant": created.model_dump()}
 
-    def update_tenant(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def update_tenant(self, params: dict[str, Any]) -> dict[str, Any]:
         """Update an existing tenant."""
         tenant = self._manager.get_tenant(params["building_number"], params["apartment_number"])
         if not tenant:
@@ -136,7 +136,7 @@ class TenantTools:
         updated = self._operations.update_tenant(tenant)
         return {"success": True, "tenant": updated.model_dump()}
 
-    def end_tenancy(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def end_tenancy(self, params: dict[str, Any]) -> dict[str, Any]:
         """End a tenant's residency."""
         move_out = params.get("move_out_date")
         if move_out:
@@ -148,7 +148,7 @@ class TenantTools:
         )
         return {"success": True, "history": history.model_dump()}
 
-    def get_tenant(self, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def get_tenant(self, params: dict[str, Any]) -> dict[str, Any] | None:
         """Get current tenant for an apartment."""
         tenant = self._manager.get_tenant(params["building_number"], params["apartment_number"])
         if tenant:

@@ -1,11 +1,12 @@
 """Tests for AI agent components."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from src.ai_agent import ReportAgent, PDFGenerator
-from src.ai_agent.reporter import ReportResult, MockLLMProvider, LLMProvider
+import pytest
+
+from src.ai_agent import PDFGenerator, ReportAgent
 from src.ai_agent.pdf_generator import PDFConfig
+from src.ai_agent.reporter import MockLLMProvider, ReportResult
 from src.communication import MCPResponse
 
 

@@ -4,9 +4,9 @@ Provides read-only access to tenant data including listings,
 history, and occupancy statistics.
 """
 
-from typing import Dict, Any
+from typing import Any
 
-from src.database import Building, TenantQueries, HistoryManager
+from src.database import Building, HistoryManager, TenantQueries
 
 
 class TenantResources:
@@ -66,7 +66,7 @@ class TenantResources:
             },
         ]
 
-    def get_buildings(self) -> Dict[str, Any]:
+    def get_buildings(self) -> dict[str, Any]:
         """Get all buildings with details."""
         buildings = Building.get_all_buildings()
         return {
@@ -75,7 +75,7 @@ class TenantResources:
             ]
         }
 
-    def get_building_details(self, building_number: int) -> Dict[str, Any]:
+    def get_building_details(self, building_number: int) -> dict[str, Any]:
         """Get details for a specific building."""
         building = Building.get_building(building_number)
         if not building:
@@ -88,17 +88,17 @@ class TenantResources:
             "tenants": [t.model_dump() for t in tenants],
         }
 
-    def get_all_tenants(self, building: int = None) -> Dict[str, Any]:
+    def get_all_tenants(self, building: int = None) -> dict[str, Any]:
         """Get all active tenants."""
         tenants = self._queries.get_all_tenants(building)
         return {"tenants": [t.model_dump() for t in tenants]}
 
-    def get_tenant_history(self, building: int, apartment: int) -> Dict[str, Any]:
+    def get_tenant_history(self, building: int, apartment: int) -> dict[str, Any]:
         """Get tenant history for an apartment."""
         history = self._history.get_apartment_history(building, apartment)
         return {"history": [h.model_dump() for h in history]}
 
-    def get_occupancy_stats(self) -> Dict[str, Any]:
+    def get_occupancy_stats(self) -> dict[str, Any]:
         """Get occupancy statistics for all buildings."""
         stats = self._queries.get_all_buildings_occupancy()
         total_apartments = sum(s["total_apartments"] for s in stats)
@@ -115,12 +115,12 @@ class TenantResources:
             },
         }
 
-    def get_whatsapp_contacts(self, building: int = None) -> Dict[str, Any]:
+    def get_whatsapp_contacts(self, building: int = None) -> dict[str, Any]:
         """Get WhatsApp contact list."""
         contacts = self._queries.get_whatsapp_contacts(building)
         return {"contacts": contacts}
 
-    def get_parking_authorizations(self, building: int = None) -> Dict[str, Any]:
+    def get_parking_authorizations(self, building: int = None) -> dict[str, Any]:
         """Get parking authorization list."""
         authorizations = self._queries.get_parking_authorizations(building)
         return {"authorizations": authorizations}

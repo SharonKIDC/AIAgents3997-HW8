@@ -1,13 +1,14 @@
 """Tests for SDK client."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from datetime import date
+from unittest.mock import MagicMock, patch
 
-from src.sdk import TenantSDK
-from src.sdk.client import TenantInfo, BuildingInfo
+import pytest
+
 from src.communication import MCPResponse
 from src.exceptions import ValidationError
+from src.sdk import TenantSDK
+from src.sdk.client import BuildingInfo, TenantInfo
 
 
 class TestTenantInfo:
@@ -102,13 +103,16 @@ class TestTenantSDK:
         mock_client.invoke_tool.return_value = MCPResponse(
             success=True,
             data={
-                "building_number": 11,
-                "apartment_number": 1,
-                "first_name": "John",
-                "last_name": "Doe",
-                "phone": "0501234567",
-                "is_owner": True,
-                "move_in_date": "2024-01-15",
+                "success": True,
+                "tenant": {
+                    "building_number": 11,
+                    "apartment_number": 1,
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "phone": "0501234567",
+                    "is_owner": True,
+                    "move_in_date": "2024-01-15",
+                },
             },
         )
         tenant = sdk.get_tenant(11, 1)

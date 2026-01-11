@@ -5,16 +5,15 @@ Comprehensive tests for tools, resources, prompts, and API endpoints.
 
 import os
 import tempfile
-from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
 
-from src.database import ExcelManager, Tenant
-from src.mcp_server.tools import TenantTools
-from src.mcp_server.resources import TenantResources
+from src.database import ExcelManager
 from src.mcp_server.prompts import ReportPrompts
+from src.mcp_server.resources import TenantResources
 from src.mcp_server.server import create_app
+from src.mcp_server.tools import TenantTools
 
 
 @pytest.fixture

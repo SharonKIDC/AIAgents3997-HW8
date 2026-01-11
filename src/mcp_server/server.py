@@ -4,30 +4,31 @@ Main server implementation providing REST API endpoints
 for tools, resources, and prompts.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.config import get_config
-from src.exceptions import ValidationError, NotFoundError, DatabaseError
-from src.mcp_server.tools import TenantTools
-from src.mcp_server.resources import TenantResources
+from src.exceptions import DatabaseError, NotFoundError, ValidationError
 from src.mcp_server.prompts import ReportPrompts
+from src.mcp_server.resources import TenantResources
+from src.mcp_server.tools import TenantTools
 
 
 class ToolRequest(BaseModel):
     """Request model for tool invocation."""
 
     name: str
-    arguments: Dict[str, Any]
+    arguments: dict[str, Any]
 
 
 class PromptRequest(BaseModel):
     """Request model for prompt generation."""
 
     name: str
-    arguments: Optional[Dict[str, Any]] = None
+    arguments: dict[str, Any] | None = None
 
 
 def _configure_cors(application: FastAPI) -> None:
@@ -101,7 +102,7 @@ def create_app(db_path: str = None) -> FastAPI:
         return resources.get_building_details(building_number)
 
     @application.get("/resources/tenants")
-    async def get_tenants(building: Optional[int] = Query(None)):
+    async def get_tenants(building: int | None = Query(None)):
         """Get all tenants."""
         return resources.get_all_tenants(building)
 
@@ -116,12 +117,12 @@ def create_app(db_path: str = None) -> FastAPI:
         return resources.get_occupancy_stats()
 
     @application.get("/resources/whatsapp")
-    async def get_whatsapp(building: Optional[int] = Query(None)):
+    async def get_whatsapp(building: int | None = Query(None)):
         """Get WhatsApp contacts."""
         return resources.get_whatsapp_contacts(building)
 
     @application.get("/resources/parking")
-    async def get_parking(building: Optional[int] = Query(None)):
+    async def get_parking(building: int | None = Query(None)):
         """Get parking authorizations."""
         return resources.get_parking_authorizations(building)
 
