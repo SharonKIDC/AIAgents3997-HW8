@@ -59,10 +59,7 @@ class OpenAIProvider(LLMProvider):
         for msg in messages:
             role = msg.get("role", "user")
             content = msg.get("content", {})
-            if isinstance(content, dict):
-                text = content.get("text", "")
-            else:
-                text = str(content)
+            text = content.get("text", "") if isinstance(content, dict) else str(content)
             formatted_messages.append({"role": role, "content": text})
         response = self._client.chat.completions.create(
             model=self._model, messages=formatted_messages

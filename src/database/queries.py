@@ -37,9 +37,10 @@ class TenantQueries:
         worksheet = workbook[self.TENANTS_SHEET]
         tenants = []
         for row in range(2, worksheet.max_row + 1):
-            if not worksheet.cell(row, 16).value:
-                if building is None or worksheet.cell(row, 1).value == building:
-                    tenants.append(manager._row_to_tenant(worksheet, row))
+            if not worksheet.cell(row, 16).value and (
+                building is None or worksheet.cell(row, 1).value == building
+            ):
+                tenants.append(manager._row_to_tenant(worksheet, row))
         return tenants
 
     def get_tenant(self, building: int, apartment: int) -> Tenant | None:
@@ -81,9 +82,8 @@ class TenantQueries:
                 full_name = tenant.full_name.lower()
                 if name.lower() not in full_name:
                     continue
-            if phone:
-                if phone not in tenant.phone:
-                    continue
+            if phone and phone not in tenant.phone:
+                continue
             results.append(tenant)
         return results
 

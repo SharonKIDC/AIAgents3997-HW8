@@ -139,10 +139,7 @@ class TenantTools:
     def end_tenancy(self, params: dict[str, Any]) -> dict[str, Any]:
         """End a tenant's residency."""
         move_out = params.get("move_out_date")
-        if move_out:
-            move_out = date.fromisoformat(move_out)
-        else:
-            move_out = date.today()
+        move_out = date.fromisoformat(move_out) if move_out else date.today()
         history = self._operations.end_tenancy(
             params["building_number"], params["apartment_number"], move_out
         )

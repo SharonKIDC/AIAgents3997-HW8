@@ -97,14 +97,14 @@ class ExcelManager:
         try:
             return load_workbook(self._db_path)
         except Exception as e:
-            raise DatabaseError(f"Failed to load database: {e}")
+            raise DatabaseError(f"Failed to load database: {e}") from e
 
     def _save_workbook(self, wb: Workbook) -> None:
         """Save workbook with error handling."""
         try:
             wb.save(self._db_path)
         except Exception as e:
-            raise DatabaseError(f"Failed to save database: {e}")
+            raise DatabaseError(f"Failed to save database: {e}") from e
 
     def _date_to_str(self, d: date) -> str:
         """Convert date to string for storage."""
