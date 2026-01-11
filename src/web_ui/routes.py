@@ -25,6 +25,7 @@ class TenantCreate(BaseModel):
     last_name: str
     phone: str
     is_owner: bool = True
+    move_in_date: Optional[str] = None
     storage_number: Optional[int] = None
     parking_slot_1: Optional[int] = None
     parking_slot_2: Optional[int] = None
@@ -33,7 +34,10 @@ class TenantCreate(BaseModel):
 class TenantUpdate(BaseModel):
     """Request model for tenant updates."""
 
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     phone: Optional[str] = None
+    is_owner: Optional[bool] = None
     storage_number: Optional[int] = None
     parking_slot_1: Optional[int] = None
     parking_slot_2: Optional[int] = None
@@ -102,6 +106,9 @@ async def get_tenant(building: int, apartment: int):
 async def create_tenant(tenant: TenantCreate):
     """Create a new tenant."""
     try:
+        move_in = None
+        if tenant.move_in_date:
+            move_in = date.fromisoformat(tenant.move_in_date)
         with _get_sdk() as sdk:
             result = sdk.create_tenant(
                 building=tenant.building_number,
@@ -110,6 +117,7 @@ async def create_tenant(tenant: TenantCreate):
                 last_name=tenant.last_name,
                 phone=tenant.phone,
                 is_owner=tenant.is_owner,
+                move_in_date=move_in,
                 storage_number=tenant.storage_number,
                 parking_slot_1=tenant.parking_slot_1,
                 parking_slot_2=tenant.parking_slot_2
@@ -120,8 +128,20 @@ async def create_tenant(tenant: TenantCreate):
 
 
 @router.patch("/tenants/{building}/{apartment}")
+async def patch_tenant(building: int, apartment: int, updates: TenantUpdate):
+    """Partial update of tenant information."""
+    try:
+        update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+        with _get_sdk() as sdk:
+            result = sdk.update_tenant(building, apartment, **update_dict)
+            return {"success": True, "data": result}
+    except ValidationError as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@router.put("/tenants/{building}/{apartment}")
 async def update_tenant(building: int, apartment: int, updates: TenantUpdate):
-    """Update tenant information."""
+    """Full update of tenant information."""
     try:
         update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
         with _get_sdk() as sdk:
