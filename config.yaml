@@ -2,15 +2,16 @@
 # Application Configuration
 
 # Building Configuration
+# As per requirements: 11 (17 apts), 13 (24 apts), 15 (24 apts), 17 (17 apts)
 buildings:
   - number: 11
-    total_apartments: 40
+    total_apartments: 17
   - number: 13
-    total_apartments: 35
+    total_apartments: 24
   - number: 15
-    total_apartments: 40
+    total_apartments: 24
   - number: 17
-    total_apartments: 35
+    total_apartments: 17
 
 # MCP Server Configuration
 mcp_server:
