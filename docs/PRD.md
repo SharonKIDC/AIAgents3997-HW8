@@ -92,12 +92,23 @@ Without a centralized tenant management system:
 - FR-1.3: Allow updating tenant information without losing historical data
 - FR-1.4: Support marking apartments as vacant
 - FR-1.5: Validate building numbers (11, 13, 15, 17) and apartment ranges
+- FR-1.6: **Owner vs Renter Flow**: When registering a renter (non-owner), the system MUST require owner details (first name, last name, phone) to be entered
+- FR-1.7: **Tenant Replacement Flow**: When registering a new tenant for an already-occupied apartment, the system MUST:
+  - Detect the existing tenant
+  - Prompt the admin to confirm replacement
+  - Set the move-out date for the previous tenant (defaults to day before new tenant's move-in)
+  - Preserve the previous tenant record in history
+- FR-1.8: **Family Members for WhatsApp**: Support adding multiple phone numbers per apartment for WhatsApp group auto-insertion (e.g., spouse, adult children)
+- FR-1.9: **Family Members for PalGate**: Support adding multiple phone numbers per apartment for gate access authorization via PalGate system
 
 **Acceptance Criteria**:
 - User can add new tenant through web UI form
 - System validates all required fields before saving
 - Historical data is preserved when tenant information is updated
 - Vacant apartments are clearly distinguished from occupied ones
+- Renter registration requires owner details to be filled
+- Replacing existing tenant prompts for confirmation and sets move-out date automatically
+- Family members can be added/removed for WhatsApp and PalGate lists
 
 ### FR-2: Multi-Building Support
 
@@ -153,11 +164,34 @@ Without a centralized tenant management system:
 - FR-5.2: Generate list of tenants for WhatsApp group addition
 - FR-5.3: Support building-specific WhatsApp group tracking
 - FR-5.4: Identify tenants not yet added to WhatsApp groups
+- FR-5.5: **Multiple Phone Numbers**: Support adding multiple family member phone numbers per apartment for WhatsApp group inclusion
+- FR-5.6: Each WhatsApp member entry includes: name and phone number
+- FR-5.7: Generate complete WhatsApp phone list including all family members
 
 **Acceptance Criteria**:
 - User can generate list of phone numbers for WhatsApp group
 - System identifies new tenants not yet in WhatsApp group
 - Reports show WhatsApp membership status
+- Family members can be added/edited/removed from WhatsApp list
+- Generated WhatsApp list includes all registered family members
+
+### FR-5B: PalGate Access Management
+
+**Description**: System must track PalGate (gate access system) phone authorizations for building entry.
+
+**Requirements**:
+- FR-5B.1: Record PalGate access status per tenant (enabled/disabled)
+- FR-5B.2: Support adding multiple family member phone numbers per apartment for gate access
+- FR-5B.3: Each PalGate entry includes: name, phone number, and optional vehicle plate number
+- FR-5B.4: Generate list of all authorized phone numbers for PalGate system import
+- FR-5B.5: Support building-specific PalGate access lists
+- FR-5B.6: Track when PalGate access was granted/revoked
+
+**Acceptance Criteria**:
+- User can add/remove phone numbers for PalGate access per apartment
+- System generates exportable list of authorized phones for PalGate
+- Each apartment can have multiple authorized phone numbers
+- Reports show PalGate authorization status per building
 
 ### FR-6: AI-Powered Report Generation
 
@@ -506,3 +540,4 @@ The following features are explicitly out of scope for v1.0 but may be considere
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-01-10 | System | Initial PRD creation |
+| 1.1 | 2026-01-11 | System | Added FR-1.6 (Owner vs Renter flow), FR-1.7 (Tenant replacement), FR-1.8/1.9 (Family members), FR-5.5-5.7 (WhatsApp family members), FR-5B (PalGate access management) |

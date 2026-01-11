@@ -3,8 +3,8 @@
 Provides REST endpoints optimized for the React UI components.
 """
 
-from datetime import date
-from typing import Optional
+from datetime import date, timedelta
+from typing import Optional, List
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -16,6 +16,23 @@ from src.exceptions import ValidationError
 router = APIRouter(prefix="/api", tags=["web-ui"])
 
 
+class OwnerInfoCreate(BaseModel):
+    """Owner information for renters."""
+
+    first_name: str
+    last_name: str
+    phone: str
+
+
+class FamilyMember(BaseModel):
+    """Family member for WhatsApp/PalGate."""
+
+    first_name: str
+    last_name: str
+    phone: str
+    vehicle_plate: Optional[str] = None
+
+
 class TenantCreate(BaseModel):
     """Request model for tenant creation."""
 
@@ -25,10 +42,14 @@ class TenantCreate(BaseModel):
     last_name: str
     phone: str
     is_owner: bool = True
+    owner_info: Optional[OwnerInfoCreate] = None
     move_in_date: Optional[str] = None
     storage_number: Optional[int] = None
     parking_slot_1: Optional[int] = None
     parking_slot_2: Optional[int] = None
+    whatsapp_members: List[FamilyMember] = []
+    palgate_members: List[FamilyMember] = []
+    replace_existing: bool = False
 
 
 class TenantUpdate(BaseModel):
@@ -38,11 +59,14 @@ class TenantUpdate(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     is_owner: Optional[bool] = None
+    owner_info: Optional[OwnerInfoCreate] = None
     storage_number: Optional[int] = None
     parking_slot_1: Optional[int] = None
     parking_slot_2: Optional[int] = None
     whatsapp_group_enabled: Optional[bool] = None
     palgate_access_enabled: Optional[bool] = None
+    whatsapp_members: Optional[List[FamilyMember]] = None
+    palgate_members: Optional[List[FamilyMember]] = None
 
 
 def _get_sdk() -> TenantSDK:
@@ -89,8 +113,9 @@ async def get_tenant(building: int, apartment: int):
     with _get_sdk() as sdk:
         tenant = sdk.get_tenant(building, apartment)
         if not tenant:
-            raise HTTPException(404, f"No tenant at Building {building}, Apt {apartment}")
+            return {"exists": False}
         return {
+            "exists": True,
             "building_number": tenant.building_number,
             "apartment_number": tenant.apartment_number,
             "first_name": tenant.first_name,
@@ -106,10 +131,48 @@ async def get_tenant(building: int, apartment: int):
 async def create_tenant(tenant: TenantCreate):
     """Create a new tenant."""
     try:
-        move_in = None
+        move_in = date.today()
         if tenant.move_in_date:
             move_in = date.fromisoformat(tenant.move_in_date)
+
         with _get_sdk() as sdk:
+            # Check if apartment is already occupied
+            existing = sdk.get_tenant(tenant.building_number, tenant.apartment_number)
+            if existing and not tenant.replace_existing:
+                return {
+                    "success": False,
+                    "requires_confirmation": True,
+                    "existing_tenant": {
+                        "first_name": existing.first_name,
+                        "last_name": existing.last_name,
+                        "phone": existing.phone,
+                        "move_in_date": existing.move_in_date.isoformat() if existing.move_in_date else None
+                    },
+                    "message": f"Apartment already occupied by {existing.full_name}"
+                }
+
+            # If replacing, end the existing tenancy first
+            if existing and tenant.replace_existing:
+                move_out = move_in - timedelta(days=1)
+                sdk.end_tenancy(
+                    tenant.building_number,
+                    tenant.apartment_number,
+                    move_out_date=move_out
+                )
+
+            # Validate owner info for renters
+            if not tenant.is_owner and not tenant.owner_info:
+                raise HTTPException(400, "Owner information required for renters")
+
+            # Build owner_info dict if provided
+            owner_info = None
+            if tenant.owner_info:
+                owner_info = {
+                    "first_name": tenant.owner_info.first_name,
+                    "last_name": tenant.owner_info.last_name,
+                    "phone": tenant.owner_info.phone
+                }
+
             result = sdk.create_tenant(
                 building=tenant.building_number,
                 apartment=tenant.apartment_number,
@@ -120,7 +183,10 @@ async def create_tenant(tenant: TenantCreate):
                 move_in_date=move_in,
                 storage_number=tenant.storage_number,
                 parking_slot_1=tenant.parking_slot_1,
-                parking_slot_2=tenant.parking_slot_2
+                parking_slot_2=tenant.parking_slot_2,
+                owner_info=owner_info,
+                whatsapp_members=[m.model_dump() for m in tenant.whatsapp_members],
+                palgate_members=[m.model_dump() for m in tenant.palgate_members]
             )
             return {"success": True, "data": result}
     except ValidationError as e:

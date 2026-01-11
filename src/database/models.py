@@ -40,6 +40,15 @@ class ParkingAuthorization(BaseModel):
     phone: str = Field(..., min_length=9, max_length=20)
 
 
+class PalGateMember(BaseModel):
+    """PalGate access authorization for gate entry."""
+
+    first_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., min_length=1, max_length=100)
+    phone: str = Field(..., min_length=9, max_length=20)
+    vehicle_plate: Optional[str] = Field(None, max_length=20)
+
+
 class Building(BaseModel):
     """Building model with apartment count from configuration."""
 
@@ -88,6 +97,7 @@ class Tenant(BaseModel):
     owner_info: Optional[OwnerInfo] = None
     whatsapp_members: List[WhatsAppMember] = Field(default_factory=list)
     parking_authorizations: List[ParkingAuthorization] = Field(default_factory=list)
+    palgate_members: List["PalGateMember"] = Field(default_factory=list)
     move_in_date: date = Field(default_factory=date.today)
     move_out_date: Optional[date] = None
     palgate_access_enabled: bool = False

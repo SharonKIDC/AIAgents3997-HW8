@@ -94,13 +94,15 @@ class TestWebUIBackend:
         assert data["full_name"] == "John Doe"
 
     def test_get_tenant_not_found(self, client, mock_sdk):
-        """Test get tenant not found."""
+        """Test get tenant not found returns exists=False."""
         mock_sdk.get_tenant.return_value = None
         response = client.get("/api/tenants/11/99")
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert response.json()["exists"] is False
 
     def test_create_tenant(self, client, mock_sdk):
         """Test create tenant endpoint."""
+        mock_sdk.get_tenant.return_value = None  # No existing tenant
         mock_sdk.create_tenant.return_value = {"success": True}
         response = client.post("/api/tenants", json={
             "building_number": 11,
