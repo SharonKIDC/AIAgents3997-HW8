@@ -1,11 +1,14 @@
 """AI Report Agent for generating tenant management reports.
 
-Uses MCP prompts and LLM API to generate formatted reports.
+Uses MCP prompts and OpenAI API to generate formatted reports.
 """
 
+import os
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+
+from openai import OpenAI
 
 from src.communication import MCPHttpClient
 from src.config import get_config
@@ -41,6 +44,41 @@ class MockLLMProvider(LLMProvider):
         return f"# Report\n\nGenerated report for query: {text[:100]}"
 
 
+class OpenAIProvider(LLMProvider):
+    """OpenAI GPT provider for report generation."""
+
+    def __init__(self, api_key: str = None, model: str = None):
+        """Initialize OpenAI provider."""
+        self._api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self._model = model or os.getenv("AI_MODEL_NAME", "gpt-4o")
+        self._client = OpenAI(api_key=self._api_key)
+
+    def generate(self, messages: List[Dict[str, Any]]) -> str:
+        """Generate response using OpenAI API."""
+        formatted_messages = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", {})
+            if isinstance(content, dict):
+                text = content.get("text", "")
+            else:
+                text = str(content)
+            formatted_messages.append({"role": role, "content": text})
+        response = self._client.chat.completions.create(
+            model=self._model,
+            messages=formatted_messages
+        )
+        return response.choices[0].message.content
+
+
+def _get_default_provider() -> LLMProvider:
+    """Get default LLM provider based on environment."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if api_key and api_key != "your-openai-api-key-here":
+        return OpenAIProvider(api_key=api_key)
+    return MockLLMProvider()
+
+
 class ReportAgent:
     """AI agent for generating tenant management reports."""
 
@@ -48,7 +86,7 @@ class ReportAgent:
         """Initialize report agent."""
         config = get_config()
         self._client = MCPHttpClient(base_url=mcp_url)
-        self._llm = llm_provider or MockLLMProvider()
+        self._llm = llm_provider or _get_default_provider()
         self._default_format = config.get("ai_agent.default_format", "markdown")
 
     def generate_occupancy_report(self, building: int = None) -> ReportResult:
