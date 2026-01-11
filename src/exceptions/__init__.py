@@ -1,6 +1,7 @@
 """Custom exceptions package."""
 
 from src.exceptions.base import (
+    CommunicationError,
     ConfigurationError,
     DatabaseError,
     NotFoundError,
@@ -14,4 +15,5 @@ __all__ = [
     "DatabaseError",
     "ValidationError",
     "NotFoundError",
+    "CommunicationError",
 ]
