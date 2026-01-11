@@ -843,12 +843,11 @@ function TenantRegistration({ onSuccess }) {
                     <div className="border-b pb-4">
                         <h3 className="text-lg font-medium mb-4">Location</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Building *</label>
+                            <FormInput label="Building" required error={fieldErrors.building_number}>
                                 <select
                                     value={formData.building_number}
                                     onChange={(e) => setFormData({...formData, building_number: e.target.value})}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className={inputClass('building_number')}
                                     required
                                 >
                                     <option value="">Select Building</option>
@@ -856,18 +855,17 @@ function TenantRegistration({ onSuccess }) {
                                         <option key={b.number} value={b.number}>Building {b.number}</option>
                                     ))}
                                 </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Apartment Number *</label>
+                            </FormInput>
+                            <FormInput label="Apartment Number" required error={fieldErrors.apartment_number}>
                                 <input
                                     type="number"
                                     value={formData.apartment_number}
                                     onChange={(e) => setFormData({...formData, apartment_number: e.target.value})}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className={inputClass('apartment_number')}
                                     required
                                     min="1"
                                 />
-                            </div>
+                            </FormInput>
                         </div>
                     </div>
 
