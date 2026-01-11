@@ -371,6 +371,39 @@ pytest tests/test_sdk.py::test_create_tenant -v
 
 ---
 
+## Git Worktrees
+
+This repository uses Git worktrees to enable parallel development on each stage of the 5-Stage MCP Architecture:
+
+| Worktree | Branch | Stage | Description |
+|----------|--------|-------|-------------|
+| `worktrees/stage1-infrastructure` | stage1-infrastructure | Stage 1 | Config, logging, exceptions |
+| `worktrees/stage2-database` | stage2-database | Stage 2 | Excel operations, models, validation |
+| `worktrees/stage3-mcp-server` | stage3-mcp-server | Stage 3 | FastAPI MCP server (tools, resources, prompts) |
+| `worktrees/stage4-communication` | stage4-communication | Stage 4 | HTTP client, SDK abstraction |
+| `worktrees/stage5-ui-sdk` | stage5-ui-sdk | Stage 5 | React UI, Python SDK, AI agent |
+
+### Working with Worktrees
+
+```bash
+# List all worktrees
+git worktree list
+
+# Navigate to a specific stage
+cd ../worktrees/stage2-database
+
+# Work on that stage's branch
+git checkout -b feature/new-query-function
+# ... make changes ...
+git commit -m "Add new query function"
+
+# Merge changes back to main
+git checkout main
+git merge stage2-database
+```
+
+---
+
 ## Documentation
 
 | Document | Description |
