@@ -1,13 +1,20 @@
 # AI Prompt Book
 
-This document catalogs all AI prompts used in the Tenant Management System for report generation and natural language queries.
+This document catalogs:
+1. **Development Prompts**: Commands given to Claude to build this project
+2. **Application Prompts**: AI prompts used in the system for report generation
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [System Architecture](#system-architecture)
+- [Development Prompts](#development-prompts)
+  - [PreProject Phase](#preproject-phase-prompts)
+  - [TaskLoop Phase](#taskloop-phase-prompts)
+  - [ReleaseGate Phase](#releasegate-phase-prompts)
+- [Application Prompts](#application-prompts)
+  - [Overview](#overview)
+  - [System Architecture](#system-architecture)
 - [Prompt Templates](#prompt-templates)
   - [Occupancy Report](#occupancy-report)
   - [Tenant List Report](#tenant-list-report)
@@ -18,6 +25,179 @@ This document catalogs all AI prompts used in the Tenant Management System for r
 - [Best Practices](#best-practices)
 
 ---
+
+## Development Prompts
+
+These are the key prompts/commands given to Claude AI to build this project.
+
+### PreProject Phase Prompts
+
+**1. Project Initialization**
+```
+Create a new project for a Residential Complex Tenant Management System.
+Set up repository structure with Python 3.10+, FastAPI, and React.
+Follow 5-stage MCP architecture.
+```
+
+**2. PRD Creation**
+```
+Create a comprehensive PRD document for the Tenant Management System.
+Include problem statement, functional requirements, non-functional requirements,
+success metrics, and risk mitigation strategies.
+Support 4 buildings: 11 (40 apts), 13 (35 apts), 15 (40 apts), 17 (35 apts).
+```
+
+**3. Architecture Design**
+```
+Design system architecture using 5-stage MCP pattern:
+Stage 1: Infrastructure (config, logging, exceptions)
+Stage 2: Database (Excel operations, models, validation)
+Stage 3: MCP Server (FastAPI with tools, resources, prompts)
+Stage 4: Communication (HTTP client, SDK abstraction)
+Stage 5: UI (React dashboard, AI query interface)
+```
+
+**4. Security Baseline**
+```
+Set up security configuration:
+- Create .env.example with all required variables
+- Create config.yaml for non-secret settings
+- Add .gitignore for secrets protection
+- Document security guidelines in docs/SECURITY.md
+```
+
+### TaskLoop Phase Prompts
+
+**5. Stage 1 Implementation**
+```
+Implement Stage 1 Infrastructure:
+- Config loading from YAML and .env
+- Structured logging with file and console output
+- Custom exception hierarchy (TenantError base class)
+- Unit tests with pytest
+```
+
+**6. Stage 2 Implementation**
+```
+Implement Stage 2 Database Layer:
+- Pydantic models for Tenant, Building, TenantHistory
+- ExcelManager for low-level openpyxl operations
+- ExcelOperations for business logic (CRUD)
+- TenantQueries for complex data queries
+- DataValidator for input validation
+- Comprehensive unit tests
+```
+
+**7. Stage 3 Implementation**
+```
+Implement Stage 3 MCP Server:
+- FastAPI application with CORS middleware
+- TenantTools class (create_tenant, update_tenant, end_tenancy)
+- TenantResources class (get buildings, tenants, occupancy, history)
+- ReportPrompts class for AI prompt generation
+- OpenAPI/Swagger documentation
+- Integration tests
+```
+
+**8. Stage 4 Implementation**
+```
+Implement Stage 4 Communication Layer:
+- BaseMCPClient abstract class
+- MCPHttpClient implementation with requests
+- Response types and error handling
+- Session management with context managers
+```
+
+**9. Stage 5 Implementation**
+```
+Implement Stage 5 UI/SDK:
+- TenantSDK high-level client
+- React dashboard with building cards
+- Tenant registration form with validation
+- AI query interface with Markdown rendering
+- Owner vs Renter workflow
+- Tenant replacement flow
+- Family member tracking (WhatsApp, PalGate)
+```
+
+**10. Testing & Quality**
+```
+Run all tests and fix any failures.
+Ensure 80%+ code coverage.
+Run linting with black, ruff, pylint.
+Fix all linting errors.
+```
+
+### ReleaseGate Phase Prompts
+
+**11. Packaging**
+```
+Configure Python packaging:
+- Update pyproject.toml with all dependencies
+- Verify pip install -e . works
+- Ensure version numbers are synced
+```
+
+**12. Documentation Updates**
+```
+Update all documentation:
+- README with comprehensive info and screenshot
+- Architecture.md with Mermaid flowcharts
+- Create EXAMPLE.md with usage examples
+- Update PRD with flowcharts
+- Create COSTS.md and BUDGET.md with Claude costs
+```
+
+**13. Quality Gates**
+```
+Run final quality gates:
+- All tests passing
+- Coverage > 80%
+- No linting errors
+- No security issues
+- Documentation complete
+```
+
+### Ad-Hoc Development Prompts
+
+**14. Feature: Owner Information**
+```
+When registering a renter (non-owner), require owner details:
+- Owner first name, last name, phone
+- Display owner info separately in tenant details
+```
+
+**15. Feature: Tenant Replacement**
+```
+When adding tenant to occupied apartment:
+- Detect existing tenant
+- Prompt for confirmation
+- Auto-set move-out date for previous tenant
+- Preserve history
+```
+
+**16. Feature: Family Members**
+```
+Add support for multiple family members per apartment:
+- WhatsApp list with names and phones
+- PalGate access list with names, phones, vehicle plates
+- Generate export lists for both
+```
+
+**17. Documentation Overhaul**
+```
+Update all docs - links don't work.
+Learn the project thoroughly.
+Update README with all relevant info and app screenshot.
+Create EXAMPLE.md with comprehensive explanations.
+Convert all diagrams to Mermaid flowcharts.
+```
+
+---
+
+## Application Prompts
+
+This section describes the prompts used within the application for AI report generation.
 
 ## Overview
 

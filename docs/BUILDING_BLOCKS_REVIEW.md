@@ -20,44 +20,45 @@ This document provides an architectural review of the Tenant Management System f
 
 The system follows a 5-stage MCP (Model Context Protocol) architecture:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Stage 5: UI Layer (React Web Application)                 │
-│  ├─ Dashboard component                                     │
-│  ├─ Tenant forms                                            │
-│  └─ AI query interface                                      │
-└─────────────────────────────────────────────────────────────┘
-                           │
-┌─────────────────────────────────────────────────────────────┐
-│  Stage 4: Communication Layer                               │
-│  ├─ MCPHttpClient (HTTP client)                            │
-│  ├─ BaseMCPClient (abstract interface)                     │
-│  └─ Response/Definition types                              │
-└─────────────────────────────────────────────────────────────┘
-                           │
-┌─────────────────────────────────────────────────────────────┐
-│  Stage 3: MCP Server (FastAPI REST API)                    │
-│  ├─ TenantTools (CRUD operations)                          │
-│  ├─ TenantResources (read-only queries)                    │
-│  ├─ ReportPrompts (AI prompt generation)                   │
-│  └─ Server application (routing, middleware)               │
-└─────────────────────────────────────────────────────────────┘
-                           │
-┌─────────────────────────────────────────────────────────────┐
-│  Stage 2: Basic Tools (Database Layer)                     │
-│  ├─ ExcelManager (low-level Excel ops)                     │
-│  ├─ ExcelOperations (business operations)                  │
-│  ├─ TenantQueries (complex queries)                        │
-│  ├─ DataValidator (validation logic)                       │
-│  └─ Tenant/Building models                                 │
-└─────────────────────────────────────────────────────────────┘
-                           │
-┌─────────────────────────────────────────────────────────────┐
-│  Stage 1: Infrastructure                                    │
-│  ├─ Config (YAML/env configuration)                        │
-│  ├─ Logging (structured logging)                           │
-│  └─ Exceptions (custom exception hierarchy)                │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Stage5[Stage 5: UI Layer]
+        Dashboard[Dashboard Component]
+        Forms[Tenant Forms]
+        AIInterface[AI Query Interface]
+    end
+
+    subgraph Stage4[Stage 4: Communication Layer]
+        MCPClient[MCPHttpClient]
+        BaseClient[BaseMCPClient]
+        Types[Response/Definition Types]
+    end
+
+    subgraph Stage3[Stage 3: MCP Server]
+        Tools[TenantTools<br/>CRUD Operations]
+        Resources[TenantResources<br/>Read-only Queries]
+        Prompts[ReportPrompts<br/>AI Prompt Generation]
+        Server[Server Application<br/>Routing, Middleware]
+    end
+
+    subgraph Stage2[Stage 2: Database Layer]
+        ExcelMgr[ExcelManager<br/>Low-level Excel Ops]
+        ExcelOps[ExcelOperations<br/>Business Operations]
+        Queries[TenantQueries<br/>Complex Queries]
+        Validator[DataValidator<br/>Validation Logic]
+        Models[Tenant/Building Models]
+    end
+
+    subgraph Stage1[Stage 1: Infrastructure]
+        Config[Config<br/>YAML/env Configuration]
+        Logging[Logging<br/>Structured Logging]
+        Exceptions[Exceptions<br/>Custom Exception Hierarchy]
+    end
+
+    Stage5 --> Stage4
+    Stage4 --> Stage3
+    Stage3 --> Stage2
+    Stage2 --> Stage1
 ```
 
 ---
@@ -167,6 +168,29 @@ The system follows a 5-stage MCP (Model Context Protocol) architecture:
 
 **Overall Score: 9.0/10**
 
+### Concern Flow Diagram
+
+```mermaid
+flowchart LR
+    subgraph Concerns[Separation of Concerns]
+        Config[Configuration<br/>10/10]
+        Models[Data Models<br/>10/10]
+        Persist[Persistence<br/>8/10]
+        Valid[Validation<br/>9/10]
+        Route[API Routing<br/>9/10]
+        Logic[Business Logic<br/>8/10]
+        AI[AI Integration<br/>8/10]
+        HTTP[HTTP Comm<br/>10/10]
+    end
+
+    Config --> Models
+    Models --> Valid
+    Valid --> Persist
+    Route --> Logic
+    Logic --> Persist
+    HTTP --> AI
+```
+
 ### Identified Leakages
 
 1. **Minor**: `excel_manager` knows about business concepts (tenant structure)
@@ -196,6 +220,32 @@ The system follows a 5-stage MCP (Model Context Protocol) architecture:
 | communication/http_client.py | HTTP communication | Session management | Pass |
 | ai_agent/reporter.py | Report orchestration | LLM provider selection | Review |
 
+### SRP Compliance Flow
+
+```mermaid
+flowchart TB
+    subgraph Pass[SRP Pass]
+        Config[config.py]
+        Models[models.py]
+        Validator[validator.py]
+        Tools[tools.py]
+        Prompts[prompts.py]
+    end
+
+    subgraph Minor[SRP Pass Minor]
+        ExcelMgr[excel_manager.py]
+        Resources[resources.py]
+        Operations[operations.py]
+    end
+
+    subgraph Review[Needs Review]
+        Reporter[reporter.py]
+    end
+
+    Pass --> Minor
+    Minor --> Review
+```
+
 ### Recommendations
 
 1. **reporter.py**: Consider extracting LLM provider factory to separate module
@@ -223,6 +273,20 @@ The system follows a 5-stage MCP (Model Context Protocol) architecture:
 
 ### Testability Enablers
 
+```mermaid
+flowchart LR
+    subgraph Enablers[Testability Enablers]
+        DI[Dependency Injection<br/>db_path, llm_provider]
+        Mock[Mock Providers<br/>MockLLMProvider]
+        Pydantic[Pydantic Models<br/>Easy Test Data]
+        ABC[Abstract Base Classes<br/>Mock Implementations]
+    end
+
+    DI --> Mock
+    Mock --> Pydantic
+    Pydantic --> ABC
+```
+
 1. **Dependency Injection**: Used throughout (db_path, llm_provider)
 2. **Mock Providers**: MockLLMProvider for testing without API calls
 3. **Pydantic Models**: Enable easy test data creation
@@ -247,6 +311,26 @@ The system follows a 5-stage MCP (Model Context Protocol) architecture:
 | MCPHttpClient | AI agent | High | Generic MCP client |
 | LLMProvider interface | Reporter | High | Can support multiple LLMs |
 | Pydantic models | Database layer | Medium | Domain-specific |
+
+### Reusability Flow
+
+```mermaid
+flowchart TB
+    subgraph High[High Reuse Potential]
+        ConfigSys[Config System]
+        ExceptHier[Exception Hierarchy]
+        MCPClient[MCPHttpClient]
+        LLMInterface[LLMProvider Interface]
+    end
+
+    subgraph Medium[Medium Reuse Potential]
+        Validator[DataValidator]
+        PydModels[Pydantic Models]
+    end
+
+    High --> Extract[Extract as Packages]
+    Medium --> Customize[Customize per Project]
+```
 
 ### Reusability Recommendations
 

@@ -333,45 +333,21 @@ with ReportAgent() as agent:
 
 ## Configuration
 
-### Environment Variables (`.env`)
+Configuration is managed through environment variables (`.env`) and YAML files (`config.yaml`).
 
+**Quick Setup:**
 ```bash
-# Database
-EXCEL_DATABASE_PATH=./data/excel/tenants.xlsx
-
-# MCP Server
-MCP_SERVER_HOST=localhost
-MCP_SERVER_PORT=8000
-
-# Web UI
-WEB_UI_PORT=8080
-
-# AI (Optional - for report generation)
-OPENAI_API_KEY=sk-your-key-here
-AI_MODEL_NAME=gpt-4o
+cp .env.example .env
+# Edit .env with your values
 ```
 
-### Application Config (`config.yaml`)
+**Key Variables:**
+- `EXCEL_DATABASE_PATH` - Path to Excel database
+- `MCP_SERVER_PORT` - MCP server port (default: 8000)
+- `WEB_UI_PORT` - Web UI port (default: 8080)
+- `OPENAI_API_KEY` - Optional, for AI reports
 
-```yaml
-buildings:
-  - number: 11
-    total_apartments: 40
-  - number: 13
-    total_apartments: 35
-  - number: 15
-    total_apartments: 40
-  - number: 17
-    total_apartments: 35
-
-database:
-  backup_enabled: true
-  backup_interval_hours: 24
-
-validation:
-  phone_pattern: "^05[0-9]-[0-9]{7}$"
-  name_pattern: "^[A-Za-z\\s\\-']+$"
-```
+For complete configuration reference, see [docs/CONFIG.md](docs/CONFIG.md).
 
 ---
 

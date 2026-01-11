@@ -1,266 +1,188 @@
 # UX/UI Analysis
 
-This document provides a comprehensive analysis of the Tenant Management System's user interface, user experience patterns, and SDK integration examples.
+This document provides analysis of the Tenant Management System's user interface, design decisions, and UX patterns.
 
 ---
 
 ## Table of Contents
 
-- [UI Overview](#ui-overview)
-- [Screen Analysis](#screen-analysis)
-  - [Dashboard](#dashboard)
-  - [AI Query Interface](#ai-query-interface)
-  - [Tenant Registration](#tenant-registration)
+- [Screenshots](#screenshots)
+- [Design Philosophy](#design-philosophy)
+- [User Flow Analysis](#user-flow-analysis)
+- [Component Architecture](#component-architecture)
 - [Design System](#design-system)
-- [SDK Integration Examples](#sdk-integration-examples)
-- [REST API Examples](#rest-api-examples)
-- [Accessibility Considerations](#accessibility-considerations)
+- [Accessibility](#accessibility)
 - [Recommendations](#recommendations)
 
 ---
 
-## UI Overview
+## Screenshots
 
-The Tenant Management System features a modern, building-themed web interface built with React. The design emphasizes clarity, efficiency, and ease of use for building managers.
+### Dashboard Overview
 
-### Design Principles
+![Dashboard Screenshot](assets/dashboard-screenshot.png)
 
-1. **Visual Clarity**: Clean layouts with ample whitespace
-2. **Building Theme**: SVG building icons and gradient backgrounds
-3. **Data-First**: Key metrics prominently displayed
-4. **Progressive Disclosure**: Details available on demand
-5. **Consistency**: Unified color scheme and component styling
-
-### Technology Stack
-
-- **Framework**: React 18+
-- **Styling**: CSS with building-themed gradients
-- **Icons**: Custom SVG building visualizations
-- **Charts**: Animated occupancy bars
-- **State**: React hooks for local state management
+**Key Elements Visible:**
+1. **Navigation Bar** - Blue gradient with building icon, nav items (Dashboard, Tenants, Register, AI Query)
+2. **Statistics Cards** - Four colored cards showing totals (Buildings: 4, Apartments: 82, Occupied: 69, Vacant: 13)
+3. **Occupancy Progress Bar** - Full-width bar showing 84.1% occupancy rate
+4. **Building Cards** - Four cards (#11, #13, #15, #17) with mini floor maps and occupancy counts
 
 ---
 
-## Screen Analysis
+## Design Philosophy
 
-### Dashboard
+### Core Principles
 
-**Screenshot Reference:** Dashboard view with building statistics
+```mermaid
+flowchart TB
+    subgraph Principles[Design Principles]
+        P1[Data-First Display]
+        P2[Building Theme]
+        P3[Progressive Disclosure]
+        P4[Color-Coded Status]
+    end
 
-**Layout Structure:**
+    subgraph Implementation[How Applied]
+        I1[Large numbers on stat cards]
+        I2[Building icons and floor visualizations]
+        I3[Click cards for details]
+        I4[Green=occupied, Gray=vacant, Red=critical]
+    end
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Header / Navigation                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │              OVERVIEW STATISTICS                     │  │
-│   │  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐          │  │
-│   │  │ Total │ │Occupd │ │Vacant │ │ Rate  │          │  │
-│   │  │  150  │ │  126  │ │  24   │ │ 84.1% │          │  │
-│   │  └───────┘ └───────┘ └───────┘ └───────┘          │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                              │
-│   ┌────────────┐ ┌────────────┐ ┌────────────┐            │
-│   │ Building   │ │ Building   │ │ Building   │            │
-│   │    11      │ │    13      │ │    15      │            │
-│   │ [SVG Icon] │ │ [SVG Icon] │ │ [SVG Icon] │            │
-│   │ 34/40 85%  │ │ 32/35 91%  │ │ 36/40 90%  │            │
-│   │ ████████░░ │ │ █████████░ │ │ █████████░ │            │
-│   └────────────┘ └────────────┘ └────────────┘            │
-│                                                              │
-│   ┌────────────┐                                            │
-│   │ Building   │                                            │
-│   │    17      │                                            │
-│   │ [SVG Icon] │                                            │
-│   │ 24/35 69%  │                                            │
-│   │ ██████░░░░ │                                            │
-│   └────────────┘                                            │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+    P1 --> I1
+    P2 --> I2
+    P3 --> I3
+    P4 --> I4
 ```
 
-**Key UI Elements:**
+### Design Decisions and Rationale
 
-| Element | Description | Interaction |
-|---------|-------------|-------------|
-| Overview Cards | Summary statistics with large numbers | Display only |
-| Building Cards | SVG building icon + occupancy bar | Click to view details |
-| Occupancy Bar | Animated gradient progress bar | Hover for exact count |
-| Navigation | Tab-based main navigation | Click to switch views |
+| Decision | Rationale | Alternative Considered |
+|----------|-----------|----------------------|
+| Building-themed UI | Users manage physical buildings, visual metaphor aids understanding | Generic data table (rejected: less intuitive) |
+| Color-coded cards | Instant status recognition without reading | Monochrome with text labels (rejected: slower comprehension) |
+| Mini floor maps | Shows apartment layout at glance | Simple percentage text (rejected: loses spatial context) |
+| Single-page app | Fast navigation, no page reloads | Multi-page with routing (rejected: unnecessary complexity) |
 
-**Design Highlights:**
+---
 
-1. **Gradient Backgrounds**: Blue-to-purple gradients for visual appeal
-2. **SVG Building Icons**: Multi-story building representations
-3. **Animated Bars**: Smooth fill animation on load
-4. **Responsive Grid**: Cards reflow on smaller screens
+## User Flow Analysis
 
-**Occupancy Rate Visualization:**
+### Primary User Journey: View Building Status
 
-```css
-/* Color coding for occupancy rates */
-.occupancy-bar {
-  background: linear-gradient(90deg, #4CAF50, #8BC34A); /* 80%+ */
-}
-.occupancy-bar.warning {
-  background: linear-gradient(90deg, #FF9800, #FFC107); /* 60-79% */
-}
-.occupancy-bar.critical {
-  background: linear-gradient(90deg, #F44336, #FF5722); /* <60% */
-}
+```mermaid
+flowchart LR
+    A[Open App] --> B[Dashboard Loads]
+    B --> C[See Overview Stats]
+    C --> D{Need Details?}
+    D -->|Yes| E[Click Building Card]
+    E --> F[View Floor Map]
+    F --> G[Click Apartment]
+    G --> H[See Tenant Details]
+    D -->|No| I[Task Complete]
+```
+
+### Secondary Flow: Register New Tenant
+
+```mermaid
+flowchart TD
+    A[Click Register] --> B[Select Building]
+    B --> C[Select Apartment]
+    C --> D{Apartment Occupied?}
+    D -->|Yes| E[Show Current Tenant]
+    E --> F{Replace Tenant?}
+    F -->|Yes| G[Confirm Replacement]
+    F -->|No| H[Cancel]
+    D -->|No| I[Show Empty Form]
+    G --> I
+    I --> J[Fill Tenant Details]
+    J --> K{Is Owner?}
+    K -->|No| L[Add Owner Info]
+    K -->|Yes| M[Skip Owner Section]
+    L --> N[Add Family Members]
+    M --> N
+    N --> O[Submit Form]
+    O --> P[Return to Dashboard]
+```
+
+### AI Query Flow
+
+```mermaid
+flowchart LR
+    A[Open AI Query] --> B[Type Question]
+    B --> C[Click Generate]
+    C --> D[Show Loading]
+    D --> E[Display Markdown Report]
+    E --> F{Export?}
+    F -->|PDF| G[Download PDF]
+    F -->|Copy| H[Copy to Clipboard]
+    F -->|No| I[Done]
 ```
 
 ---
 
-### AI Query Interface
+## Component Architecture
 
-**Screenshot Reference:** AI query page with natural language input
+### UI Component Hierarchy
 
-**Layout Structure:**
+```mermaid
+flowchart TB
+    subgraph App[Application Root]
+        Nav[Navigation Bar]
+        Main[Main Content Area]
+        Footer[Footer]
+    end
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Header / Navigation                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │              AI QUERY INTERFACE                      │  │
-│   │                                                      │  │
-│   │  ┌───────────────────────────────────────────────┐  │  │
-│   │  │ How many residents live in building #15?      │  │  │
-│   │  └───────────────────────────────────────────────┘  │  │
-│   │                                   [Generate Report]  │  │
-│   │                                                      │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                              │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │              REPORT OUTPUT                           │  │
-│   │                                                      │  │
-│   │  # Building 15 Resident Count                       │  │
-│   │                                                      │  │
-│   │  ## Summary                                          │  │
-│   │  Building 15 currently has **36 occupied**          │  │
-│   │  apartments out of 40 total units...                │  │
-│   │                                                      │  │
-│   │  ## Breakdown                                        │  │
-│   │  | Status | Count |                                  │  │
-│   │  |--------|-------|                                  │  │
-│   │  | Occupied | 36 |                                   │  │
-│   │  | Vacant | 4 |                                      │  │
-│   │                                                      │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                              │
-│                          [Export PDF] [Copy]                │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+    subgraph Views[View Components]
+        Dashboard[Dashboard View]
+        Tenants[Tenants View]
+        Register[Register View]
+        AIQuery[AI Query View]
+    end
+
+    subgraph Dashboard
+        StatCards[Stat Cards Row]
+        OccupancyBar[Occupancy Progress]
+        BuildingGrid[Building Cards Grid]
+    end
+
+    subgraph BuildingCard[Building Card]
+        Icon[Building Icon]
+        Stats[Occupancy Stats]
+        FloorMap[Mini Floor Map]
+    end
+
+    Main --> Views
+    Dashboard --> StatCards
+    Dashboard --> OccupancyBar
+    Dashboard --> BuildingGrid
+    BuildingGrid --> BuildingCard
 ```
 
-**Key UI Elements:**
+### State Management
 
-| Element | Description | Interaction |
-|---------|-------------|-------------|
-| Query Input | Large text area for natural language | Type query |
-| Generate Button | Primary action button | Click to submit |
-| Report Output | Rendered Markdown area | Scrollable, selectable |
-| Export Options | PDF download, copy to clipboard | Click actions |
+```mermaid
+flowchart LR
+    subgraph State[Application State]
+        Buildings[buildings: Array]
+        Tenants[tenants: Map]
+        Selected[selectedBuilding: Number]
+        View[currentView: String]
+    end
 
-**Query Examples Displayed:**
+    subgraph Actions[User Actions]
+        A1[Select Building]
+        A2[Register Tenant]
+        A3[Switch View]
+        A4[Run AI Query]
+    end
 
-The interface suggests common queries:
-- "Show all tenants in building 11"
-- "List apartments with parking access"
-- "How many owners vs renters?"
-- "Show tenant history for apartment 205"
-
-**Response Rendering:**
-
-- Markdown is rendered with proper styling
-- Tables are formatted with borders
-- Code blocks have syntax highlighting
-- Links are clickable
-
----
-
-### Tenant Registration
-
-**Screenshot Reference:** Register new tenant form with family members
-
-**Layout Structure:**
-
+    A1 --> Selected
+    A2 --> Tenants
+    A3 --> View
+    A4 -->|Fetch| Buildings
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Header / Navigation                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │              REGISTER NEW TENANT                     │  │
-│   │                                                      │  │
-│   │  Building*         Apartment*        Storage         │  │
-│   │  [Dropdown ▼]      [Number    ]      [Number    ]   │  │
-│   │                                                      │  │
-│   │  ─────────────────────────────────────────────────  │  │
-│   │                                                      │  │
-│   │  First Name*       Last Name*        Phone*          │  │
-│   │  [            ]    [            ]    [054-       ]   │  │
-│   │                                                      │  │
-│   │  ─────────────────────────────────────────────────  │  │
-│   │                                                      │  │
-│   │  [✓] Is Owner      [ ] Parking Access               │  │
-│   │                    [ ] WhatsApp Group                │  │
-│   │                                                      │  │
-│   │  ─────────────────────────────────────────────────  │  │
-│   │                                                      │  │
-│   │  FAMILY MEMBERS (WhatsApp/PalGate)                  │  │
-│   │  ┌─────────────────────────────────────────────┐   │  │
-│   │  │ Name              Phone           Actions   │   │  │
-│   │  │ Sarah Cohen       052-9876543     [Remove]  │   │  │
-│   │  │ David Cohen       054-1111111     [Remove]  │   │  │
-│   │  └─────────────────────────────────────────────┘   │  │
-│   │                              [+ Add Family Member]  │  │
-│   │                                                      │  │
-│   │  ─────────────────────────────────────────────────  │  │
-│   │                                                      │  │
-│   │                    [Cancel]  [Register Tenant]       │  │
-│   │                                                      │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Key UI Elements:**
-
-| Element | Description | Validation |
-|---------|-------------|------------|
-| Building Dropdown | Select from 11, 13, 15, 17 | Required |
-| Apartment Number | Numeric input | Required, range check |
-| First/Last Name | Text inputs | Required, pattern check |
-| Phone | Formatted input | Pattern: 05X-XXXXXXX |
-| Is Owner Toggle | Checkbox | Shows owner fields if unchecked |
-| Family Members | Dynamic list | Add/remove buttons |
-
-**Conditional Logic:**
-
-When "Is Owner" is unchecked, additional owner fields appear:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  OWNER INFORMATION                                      │
-│                                                         │
-│  Owner First Name*   Owner Last Name*   Owner Phone*   │
-│  [              ]    [              ]    [054-      ]  │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Form Validation:**
-
-| Field | Validation Rule | Error Message |
-|-------|-----------------|---------------|
-| Building | Must be 11, 13, 15, or 17 | "Select a valid building" |
-| Apartment | 1-40 for 11/15, 1-35 for 13/17 | "Apartment out of range" |
-| Phone | Match 05X-XXXXXXX pattern | "Invalid phone format" |
-| Name | Letters, spaces, hyphens only | "Invalid characters" |
 
 ---
 
@@ -268,32 +190,47 @@ When "Is Owner" is unchecked, additional owner fields appear:
 
 ### Color Palette
 
-| Color | Hex | Usage |
-|-------|-----|-------|
-| Primary Blue | #1976D2 | Headers, primary buttons |
-| Secondary Green | #388E3C | Success states, occupancy |
-| Accent Orange | #F57C00 | Warnings, highlights |
-| Error Red | #D32F2F | Errors, critical states |
-| Background | #F5F5F5 | Page background |
-| Card White | #FFFFFF | Card backgrounds |
-| Text Primary | #212121 | Main text |
-| Text Secondary | #757575 | Secondary text |
+| Color | Hex | CSS Variable | Usage |
+|-------|-----|--------------|-------|
+| Primary Blue | #3b82f6 | `--color-primary` | Navigation, buttons, links |
+| Success Green | #22c55e | `--color-success` | Occupied status, confirmations |
+| Warning Yellow | #eab308 | `--color-warning` | Medium occupancy, alerts |
+| Danger Red | #ef4444 | `--color-danger` | Low occupancy, errors |
+| Background | #f3f4f6 | `--color-bg` | Page background |
+| Card White | #ffffff | `--color-card` | Card backgrounds |
+
+### Gradient Styles
+
+```mermaid
+flowchart LR
+    subgraph Gradients[Gradient Usage]
+        Nav[Nav: Blue 135deg]
+        StatBlue[Stat Card: Blue]
+        StatGreen[Stat Card: Green]
+        StatYellow[Stat Card: Yellow]
+        StatRed[Stat Card: Red]
+    end
+```
+
+**CSS Gradient Definitions:**
+- Navigation: `linear-gradient(135deg, #1e40af, #3b82f6, #60a5fa)`
+- Blue Card: `linear-gradient(135deg, #3b82f6, #1d4ed8)`
+- Green Card: `linear-gradient(135deg, #22c55e, #16a34a)`
 
 ### Typography
 
-| Element | Font | Size | Weight |
-|---------|------|------|--------|
-| H1 | Roboto | 32px | 700 |
-| H2 | Roboto | 24px | 600 |
-| H3 | Roboto | 20px | 600 |
-| Body | Roboto | 16px | 400 |
-| Caption | Roboto | 14px | 400 |
-| Button | Roboto | 14px | 500 |
+| Element | Size | Weight | Font |
+|---------|------|--------|------|
+| H1 | 32px | 700 | System sans-serif |
+| H2 | 24px | 600 | System sans-serif |
+| Body | 16px | 400 | System sans-serif |
+| Stat Number | 36px | 700 | System sans-serif |
+| Caption | 14px | 400 | System sans-serif |
 
-### Component Spacing
+### Spacing Scale
 
-| Size | Value | Usage |
-|------|-------|-------|
+| Token | Value | Usage |
+|-------|-------|-------|
 | xs | 4px | Inline elements |
 | sm | 8px | Related items |
 | md | 16px | Card padding |
@@ -302,265 +239,97 @@ When "Is Owner" is unchecked, additional owner fields appear:
 
 ---
 
-## SDK Integration Examples
-
-### Python SDK Usage
-
-```python
-from src.communication import MCPHttpClient
-from src.ai_agent import ReportAgent
-
-# Initialize client
-client = MCPHttpClient(base_url="http://localhost:8000")
-
-# Get all buildings
-buildings = client.get_resource("/buildings")
-print(f"Buildings: {buildings.data}")
-
-# Get tenants for building 11
-tenants = client.get_resource("/tenants", params={"building": 11})
-for tenant in tenants.data.get("tenants", []):
-    print(f"Apt {tenant['apartment']}: {tenant['first_name']} {tenant['last_name']}")
-
-# Create a new tenant
-result = client.invoke_tool("create_tenant", {
-    "building_number": 11,
-    "apartment_number": 101,
-    "first_name": "John",
-    "last_name": "Smith",
-    "phone": "054-1234567",
-    "is_owner": True
-})
-print(f"Created: {result.data}")
-
-# Generate AI report
-with ReportAgent() as agent:
-    report = agent.generate_occupancy_report(building=11)
-    print(report.content)
-
-    # Custom query
-    custom = agent.process_custom_query("Show all renters in building 15")
-    print(custom.content)
-
-# Close connection
-client.close()
-```
-
-### Async Python Usage
-
-```python
-import asyncio
-from src.communication import MCPHttpClient
-
-async def fetch_data():
-    client = MCPHttpClient()
-
-    # Parallel requests
-    buildings_task = asyncio.create_task(
-        asyncio.to_thread(client.get_resource, "/buildings")
-    )
-    occupancy_task = asyncio.create_task(
-        asyncio.to_thread(client.get_resource, "/occupancy")
-    )
-
-    buildings, occupancy = await asyncio.gather(buildings_task, occupancy_task)
-
-    print(f"Buildings: {buildings.data}")
-    print(f"Occupancy: {occupancy.data}")
-
-    client.close()
-
-asyncio.run(fetch_data())
-```
-
----
-
-## REST API Examples
-
-### Get All Buildings
-
-```bash
-curl -X GET http://localhost:8000/resources/buildings
-```
-
-**Response:**
-```json
-{
-  "buildings": [
-    {"number": 11, "total_apartments": 40, "floors": 10},
-    {"number": 13, "total_apartments": 35, "floors": 9},
-    {"number": 15, "total_apartments": 40, "floors": 10},
-    {"number": 17, "total_apartments": 35, "floors": 9}
-  ]
-}
-```
-
-### Get Tenants by Building
-
-```bash
-curl -X GET "http://localhost:8000/resources/tenants?building=11"
-```
-
-**Response:**
-```json
-{
-  "tenants": [
-    {
-      "building_number": 11,
-      "apartment_number": 101,
-      "first_name": "John",
-      "last_name": "Smith",
-      "phone": "054-1234567",
-      "is_owner": true,
-      "move_in_date": "2023-01-15",
-      "whatsapp_group": true,
-      "parking_slot_1": "A12"
-    }
-  ]
-}
-```
-
-### Create Tenant
-
-```bash
-curl -X POST http://localhost:8000/tools/invoke \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "create_tenant",
-    "arguments": {
-      "building_number": 11,
-      "apartment_number": 205,
-      "first_name": "Sarah",
-      "last_name": "Cohen",
-      "phone": "052-9876543",
-      "is_owner": false,
-      "owner_info": {
-        "first_name": "David",
-        "last_name": "Levy",
-        "phone": "054-5555555"
-      }
-    }
-  }'
-```
-
-### Generate AI Report
-
-```bash
-curl -X POST http://localhost:8000/prompts/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "custom_query",
-    "arguments": {
-      "query": "How many apartments have parking access in building 15?"
-    }
-  }'
-```
-
-**Response:**
-```json
-{
-  "messages": [
-    {
-      "role": "system",
-      "content": {
-        "type": "text",
-        "text": "You are a tenant management assistant..."
-      }
-    },
-    {
-      "role": "user",
-      "content": {
-        "type": "text",
-        "text": "How many apartments have parking access in building 15?"
-      }
-    }
-  ]
-}
-```
-
-### Get Occupancy Statistics
-
-```bash
-curl -X GET http://localhost:8000/resources/occupancy
-```
-
-**Response:**
-```json
-{
-  "total_apartments": 150,
-  "occupied": 126,
-  "vacant": 24,
-  "occupancy_rate": 84.0,
-  "buildings": [
-    {"building": 11, "total": 40, "occupied": 34, "vacant": 6, "rate": 85.0},
-    {"building": 13, "total": 35, "occupied": 32, "vacant": 3, "rate": 91.4},
-    {"building": 15, "total": 40, "occupied": 36, "vacant": 4, "rate": 90.0},
-    {"building": 17, "total": 35, "occupied": 24, "vacant": 11, "rate": 68.6}
-  ]
-}
-```
-
----
-
-## Accessibility Considerations
+## Accessibility
 
 ### Current Implementation
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Keyboard navigation | Partial | Forms work, dashboard needs improvement |
-| Screen reader support | Basic | ARIA labels on buttons |
-| Color contrast | Good | Meets WCAG AA |
-| Focus indicators | Good | Clear focus rings |
-| Error messaging | Good | Descriptive error text |
+| Feature | Status | Implementation |
+|---------|--------|----------------|
+| Keyboard Navigation | Partial | Tab through nav, forms work |
+| Color Contrast | Good | All text meets WCAG AA (4.5:1) |
+| Focus Indicators | Good | Blue outline on focus |
+| Screen Reader | Basic | Buttons have labels |
+| Responsive | Good | Grid adapts to screen size |
 
-### Recommendations
+### Accessibility Flow
 
-1. **Add ARIA Labels**: Building cards need `aria-label` for screen readers
-2. **Keyboard Shortcuts**: Implement Ctrl+N for new tenant
-3. **Skip Links**: Add "Skip to main content" for keyboard users
-4. **High Contrast Mode**: Add optional high contrast theme
-5. **Focus Management**: Improve focus flow after form submission
+```mermaid
+flowchart TD
+    subgraph Current[Current State]
+        C1[Keyboard navigation works]
+        C2[Color contrast OK]
+        C3[Basic ARIA labels]
+    end
+
+    subgraph Needed[Improvements Needed]
+        N1[Building card ARIA labels]
+        N2[Skip to main link]
+        N3[Screen reader announcements]
+        N4[High contrast mode]
+    end
+
+    Current --> Needed
+```
 
 ---
 
 ## Recommendations
 
-### UI Improvements
+### Short-Term Improvements
 
-1. **Dashboard Enhancements**
-   - Add click-to-drill-down on building cards
-   - Show recent activity feed
-   - Add quick action buttons
+```mermaid
+flowchart LR
+    subgraph P1[Priority 1]
+        A[Add ARIA labels to cards]
+        B[Inline form validation]
+        C[Loading skeletons]
+    end
 
-2. **Form Improvements**
-   - Inline validation as user types
-   - Auto-save drafts
-   - Progress indicator for multi-step forms
+    subgraph P2[Priority 2]
+        D[Toast notifications]
+        E[Keyboard shortcuts]
+        F[Recent activity feed]
+    end
 
-3. **Search Enhancement**
-   - Global search in header
-   - Search suggestions/autocomplete
-   - Recent searches history
+    P1 --> P2
+```
+
+### Feature Roadmap
+
+| Feature | Description | Complexity |
+|---------|-------------|------------|
+| Global Search | Search tenants from header | Medium |
+| Bulk Actions | Select multiple apartments | Medium |
+| Export Reports | Download tenant lists as CSV | Low |
+| Dark Mode | Alternative color scheme | Medium |
+| Mobile App | React Native version | High |
 
 ### UX Improvements
 
-1. **Onboarding**
-   - First-time user tour
-   - Contextual help tooltips
-   - Sample data for exploration
-
-2. **Feedback**
-   - Toast notifications for actions
+1. **Feedback Enhancement**
+   - Toast notifications for actions (success/error)
    - Loading skeletons instead of spinners
-   - Undo capability for deletions
+   - Undo capability for tenant deletion
 
-3. **Mobile Experience**
-   - Responsive design for tablets
-   - Touch-friendly controls
-   - Swipe gestures for navigation
+2. **Navigation Enhancement**
+   - Breadcrumb trail for deep navigation
+   - Recent items in sidebar
+   - Quick-access keyboard shortcuts
+
+3. **Form Enhancement**
+   - Auto-save form drafts
+   - Inline validation feedback
+   - Smart defaults based on context
 
 ---
 
-**Document Version:** 1.0.0
+## Related Documentation
+
+- [Architecture.md](Architecture.md) - Technical architecture and data flow
+- [EXAMPLE.md](EXAMPLE.md) - Usage examples with screenshots
+- [PRD.md](PRD.md) - Product requirements and specifications
+
+---
+
+**Document Version:** 2.0.0
 **Last Updated:** 2026-01-11

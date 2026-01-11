@@ -1,246 +1,185 @@
-# Project Budget
+# Project Budget - LLM Implementation Costs
 
-This document outlines the budget allocation for the Tenant Management System across development phases, operations, and future enhancements.
+This document tracks the actual costs of building this project using Claude AI, plus hosting infrastructure costs.
 
 ---
 
 ## Table of Contents
 
-- [Budget Overview](#budget-overview)
-- [Phase Budgets](#phase-budgets)
-- [Operational Budget](#operational-budget)
-- [Contingency Planning](#contingency-planning)
-- [Budget Tracking](#budget-tracking)
+- [LLM Development Costs](#llm-development-costs)
+- [Server Hosting Costs](#server-hosting-costs)
+- [Ongoing AI Costs](#ongoing-ai-costs)
+- [Total Budget Summary](#total-budget-summary)
 
 ---
 
-## Budget Overview
+## LLM Development Costs
 
-### Total Project Budget: $55,000 (Year 1)
+### Claude API Usage During Development
 
-| Category | Allocation | Percentage |
-|----------|------------|------------|
-| Development | $40,000 | 73% |
-| Operations & Support | $10,000 | 18% |
-| AI/API Costs | $1,000 | 2% |
-| Contingency | $4,000 | 7% |
-| **Total** | **$55,000** | **100%** |
+The entire project was built using Claude (Opus 4.5 and Sonnet models). Below are the estimated costs based on actual usage.
 
----
+#### Token Consumption Estimates
 
-## Phase Budgets
+| Phase | Input Tokens | Output Tokens | Sessions |
+|-------|--------------|---------------|----------|
+| PreProject | ~150,000 | ~80,000 | 5 |
+| TaskLoop - Stage 1 | ~200,000 | ~120,000 | 8 |
+| TaskLoop - Stage 2 | ~350,000 | ~200,000 | 12 |
+| TaskLoop - Stage 3 | ~400,000 | ~250,000 | 15 |
+| TaskLoop - Stage 4 | ~250,000 | ~150,000 | 8 |
+| TaskLoop - Stage 5 | ~500,000 | ~300,000 | 18 |
+| ReleaseGate | ~300,000 | ~180,000 | 10 |
+| **Total** | **~2,150,000** | **~1,280,000** | **76** |
 
-### PreProject Phase
+#### Cost Calculation (Claude Pricing)
 
-**Budget:** $5,000 | **Duration:** 1 week
+**Claude Opus 4.5 Pricing:**
+- Input: $15.00 per 1M tokens
+- Output: $75.00 per 1M tokens
 
-| Task | Allocated | Actual | Status |
-|------|-----------|--------|--------|
-| Repository scaffolding | $500 | $500 | Complete |
-| PRD creation | $1,000 | $1,000 | Complete |
-| Architecture design | $1,500 | $1,500 | Complete |
-| Security baseline | $500 | $500 | Complete |
-| Environment setup | $500 | $500 | Complete |
-| Documentation | $1,000 | $1,000 | Complete |
-| **Total** | **$5,000** | **$5,000** | **100%** |
+**Claude Sonnet 4 Pricing:**
+- Input: $3.00 per 1M tokens
+- Output: $15.00 per 1M tokens
 
-### TaskLoop Phase - Stage 1: Infrastructure
+#### Estimated Development Costs
 
-**Budget:** $4,000 | **Duration:** 1 week
+| Model Used | Input Cost | Output Cost | Total |
+|------------|------------|-------------|-------|
+| Claude Opus (60% usage) | $19.35 | $57.60 | $76.95 |
+| Claude Sonnet (40% usage) | $2.58 | $7.68 | $10.26 |
+| **Total API Cost** | **$21.93** | **$65.28** | **$87.21** |
 
-| Task | Allocated | Actual | Status |
-|------|-----------|--------|--------|
-| Configuration management | $1,000 | $1,000 | Complete |
-| Logging setup | $800 | $800 | Complete |
-| Exception handling | $700 | $700 | Complete |
-| Testing infrastructure | $1,000 | $1,000 | Complete |
-| Documentation | $500 | $500 | Complete |
-| **Total** | **$4,000** | **$4,000** | **100%** |
+#### Development Time (Claude Execution)
 
-### TaskLoop Phase - Stage 2: Basic Tools
-
-**Budget:** $6,000 | **Duration:** 1.5 weeks
-
-| Task | Allocated | Actual | Status |
-|------|-----------|--------|--------|
-| Excel database operations | $2,000 | $2,000 | Complete |
-| Data validation | $1,500 | $1,500 | Complete |
-| Query functions | $1,500 | $1,500 | Complete |
-| Backup/restore utilities | $500 | $500 | Complete |
-| Unit tests | $500 | $500 | Complete |
-| **Total** | **$6,000** | **$6,000** | **100%** |
-
-### TaskLoop Phase - Stage 3: MCP Server
-
-**Budget:** $8,000 | **Duration:** 2 weeks
-
-| Task | Allocated | Actual | Status |
-|------|-----------|--------|--------|
-| FastAPI server setup | $1,500 | $1,500 | Complete |
-| Tools implementation | $2,000 | $2,000 | Complete |
-| Resources implementation | $1,500 | $1,500 | Complete |
-| Prompts implementation | $1,500 | $1,500 | Complete |
-| API documentation | $500 | $500 | Complete |
-| Integration tests | $1,000 | $1,000 | Complete |
-| **Total** | **$8,000** | **$8,000** | **100%** |
-
-### TaskLoop Phase - Stage 4: Communication Layer
-
-**Budget:** $5,000 | **Duration:** 1 week
-
-| Task | Allocated | Actual | Status |
-|------|-----------|--------|--------|
-| HTTP client | $1,500 | $1,500 | Complete |
-| SDK abstraction | $1,500 | $1,500 | Complete |
-| Error handling | $1,000 | $1,000 | Complete |
-| Integration testing | $1,000 | $1,000 | Complete |
-| **Total** | **$5,000** | **$5,000** | **100%** |
-
-### TaskLoop Phase - Stage 5: UI/SDK
-
-**Budget:** $12,000 | **Duration:** 2.5 weeks
-
-| Task | Allocated | Actual | Status |
-|------|-----------|--------|--------|
-| React app setup | $1,000 | $1,000 | Complete |
-| Dashboard component | $2,500 | $2,500 | Complete |
-| Tenant forms | $2,500 | $2,500 | Complete |
-| AI query interface | $2,000 | $2,000 | Complete |
-| Building visualizations | $2,000 | $2,000 | Complete |
-| Styling/UX polish | $1,000 | $1,000 | Complete |
-| E2E testing | $1,000 | $1,000 | Complete |
-| **Total** | **$12,000** | **$12,000** | **100%** |
-
-### ReleaseGate Phase
-
-**Budget:** $4,000 | **Duration:** 1 week
-
-| Task | Allocated | Actual | Status |
-|------|-----------|--------|--------|
-| Package configuration | $800 | $800 | Complete |
-| Quality review | $1,000 | $1,000 | Complete |
-| Security audit | $800 | $800 | Complete |
-| Documentation finalization | $800 | $800 | Complete |
-| Deployment prep | $600 | $600 | Complete |
-| **Total** | **$4,000** | **$4,000** | **100%** |
+| Phase | Claude Active Time | Notes |
+|-------|-------------------|-------|
+| PreProject | ~2 hours | PRD, architecture, scaffolding |
+| TaskLoop | ~12 hours | All 5 stages implementation |
+| ReleaseGate | ~3 hours | Quality gates and documentation |
+| **Total Claude Time** | **~17 hours** | |
 
 ---
 
-## Operational Budget
+## Server Hosting Costs
 
-### Annual Operations: $10,000
+### Option 1: Local Deployment (Current)
 
-| Category | Monthly | Annual | Notes |
-|----------|---------|--------|-------|
-| Maintenance | $500 | $6,000 | Bug fixes, updates |
-| Support | $200 | $2,400 | User assistance |
-| Monitoring | $50 | $600 | System health checks |
-| Documentation | $85 | $1,000 | Updates, guides |
-| **Total** | **$835** | **$10,000** | |
+| Component | Cost | Notes |
+|-----------|------|-------|
+| Existing hardware | $0 | Uses current machine |
+| Electricity | ~$5/month | Minimal overhead |
+| **Monthly Cost** | **~$5** | |
+| **Annual Cost** | **~$60** | |
 
-### AI/API Budget: $1,000/year
+### Option 2: VPS Hosting (Recommended for Production)
 
-| Service | Monthly | Annual |
-|---------|---------|--------|
-| OpenAI API | $50-100 | $600-1,200 |
-| Backup API allowance | $35 | $400 |
-| **Total** | **$85-135** | **$1,000** |
+| Provider | Specs | Monthly | Annual |
+|----------|-------|---------|--------|
+| **DigitalOcean** | 2 vCPU, 2GB RAM | $18 | $216 |
+| **Linode** | 2 vCPU, 2GB RAM | $18 | $216 |
+| **Vultr** | 2 vCPU, 2GB RAM | $18 | $216 |
+| **Hetzner** | 2 vCPU, 4GB RAM | $6 | $72 |
 
----
+**Recommended**: Hetzner CX21 ($6/month) - Best value for this application.
 
-## Contingency Planning
+### Option 3: Cloud Platform Hosting
 
-### Contingency Reserve: $4,000 (7%)
+| Provider | Service | Monthly | Annual |
+|----------|---------|---------|--------|
+| **AWS** | EC2 t3.small | $15-25 | $180-300 |
+| **Google Cloud** | e2-small | $15-20 | $180-240 |
+| **Azure** | B1s | $12-18 | $144-216 |
 
-| Risk Category | Reserved | Probability | Impact |
-|---------------|----------|-------------|--------|
-| Scope changes | $1,500 | Medium | High |
-| Technical issues | $1,000 | Low | Medium |
-| Integration delays | $500 | Low | Low |
-| Third-party API changes | $500 | Medium | Medium |
-| Emergency fixes | $500 | Low | High |
-| **Total Reserve** | **$4,000** | | |
+### MCP Server Requirements
 
-### Contingency Usage Guidelines
-
-1. **Pre-approval Required**: Any use over $500 requires stakeholder approval
-2. **Documentation**: All contingency usage must be documented with justification
-3. **Replenishment**: Unused contingency carries forward or returns to main budget
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| CPU | 1 vCPU | 2 vCPU |
+| RAM | 1 GB | 2 GB |
+| Storage | 10 GB | 20 GB |
+| Network | 1 TB/month | 2 TB/month |
 
 ---
 
-## Budget Tracking
+## Ongoing AI Costs
 
-### Phase Summary
+If AI report features are used in production:
 
-| Phase | Budget | Spent | Remaining | % Used |
-|-------|--------|-------|-----------|--------|
-| PreProject | $5,000 | $5,000 | $0 | 100% |
-| Stage 1: Infrastructure | $4,000 | $4,000 | $0 | 100% |
-| Stage 2: Tools | $6,000 | $6,000 | $0 | 100% |
-| Stage 3: MCP | $8,000 | $8,000 | $0 | 100% |
-| Stage 4: Communication | $5,000 | $5,000 | $0 | 100% |
-| Stage 5: UI/SDK | $12,000 | $12,000 | $0 | 100% |
-| ReleaseGate | $4,000 | $4,000 | $0 | 100% |
-| Operations (Year 1) | $10,000 | $0 | $10,000 | 0% |
-| AI/API | $1,000 | $50 | $950 | 5% |
-| Contingency | $4,000 | $0 | $4,000 | 0% |
-| **Total** | **$55,000** | **$44,050** | **$10,950** | **80%** |
+### Per-Query Cost Estimates
 
-### Monthly Burn Rate
+| Query Type | Input Tokens | Output Tokens | Cost (GPT-4o) |
+|------------|--------------|---------------|---------------|
+| Occupancy Report | ~500 | ~1,000 | $0.012 |
+| Tenant List | ~800 | ~2,000 | $0.023 |
+| Custom Query | ~600 | ~1,500 | $0.018 |
 
-| Month | Development | Operations | AI/API | Total | Cumulative |
-|-------|-------------|------------|--------|-------|------------|
-| Jan | $20,000 | $0 | $25 | $20,025 | $20,025 |
-| Feb | $15,000 | $0 | $25 | $15,025 | $35,050 |
-| Mar | $9,000 | $835 | $50 | $9,885 | $44,935 |
-| Apr | $0 | $835 | $85 | $920 | $45,855 |
-| May | $0 | $835 | $85 | $920 | $46,775 |
-| Jun | $0 | $835 | $85 | $920 | $47,695 |
+**Note**: Using OpenAI GPT-4o for production queries (configured in system).
 
----
+### Monthly Projections by Usage
 
-## Future Budget Planning
+| Tier | Queries/Day | Monthly Queries | Monthly Cost |
+|------|-------------|-----------------|--------------|
+| Light | 10 | 300 | ~$5 |
+| Medium | 30 | 900 | ~$15 |
+| Heavy | 100 | 3,000 | ~$50 |
 
-### Year 2 Budget Estimate: $20,000
+### Alternative: Use Claude for Production
 
-| Category | Amount | Notes |
-|----------|--------|-------|
-| Maintenance | $8,000 | Reduced from Y1 |
-| Enhancements | $6,000 | New features |
-| AI/API | $1,500 | Increased usage |
-| Support | $3,000 | Training, docs |
-| Contingency | $1,500 | 7.5% |
-| **Total** | **$20,000** | |
+If using Claude Sonnet for production AI queries:
 
-### Potential Enhancements (Budgeted Separately)
-
-| Feature | Estimated Cost | Priority |
-|---------|----------------|----------|
-| Authentication system | $8,000 | High |
-| Mobile-responsive redesign | $5,000 | Medium |
-| Advanced analytics | $6,000 | Medium |
-| Email notifications | $3,000 | Low |
-| Document uploads | $4,000 | Low |
+| Tier | Monthly Queries | Input Tokens | Output Tokens | Monthly Cost |
+|------|-----------------|--------------|---------------|--------------|
+| Light | 300 | 180K | 450K | ~$7 |
+| Medium | 900 | 540K | 1.35M | ~$22 |
+| Heavy | 3,000 | 1.8M | 4.5M | ~$73 |
 
 ---
 
-## Budget Approval History
+## Total Budget Summary
 
-| Date | Change | Amount | Approved By |
-|------|--------|--------|-------------|
-| 2026-01-10 | Initial budget | $55,000 | Project Sponsor |
-| 2026-01-11 | Development complete | $44,050 | Project Manager |
+### One-Time Development Cost
+
+| Item | Cost |
+|------|------|
+| Claude API usage (development) | $87.21 |
+| **Total Development** | **$87.21** |
+
+### Annual Operating Costs
+
+| Scenario | Hosting | AI API | Total/Year |
+|----------|---------|--------|------------|
+| **Minimal** (local, light AI) | $60 | $60 | $120 |
+| **Standard** (VPS, medium AI) | $72 | $180 | $252 |
+| **Production** (cloud, heavy AI) | $216 | $600 | $816 |
+
+### 3-Year Total Cost of Ownership
+
+| Scenario | Year 1 | Year 2 | Year 3 | Total |
+|----------|--------|--------|--------|-------|
+| Minimal | $207 | $120 | $120 | $447 |
+| Standard | $339 | $252 | $252 | $843 |
+| Production | $903 | $816 | $816 | $2,535 |
+
+*Year 1 includes $87.21 development cost*
 
 ---
 
-## Budget Contact
+## Budget Recommendations
 
-For budget inquiries or change requests:
-- **Project Manager**: budget@example.com
-- **Finance Contact**: finance@example.com
+1. **Development**: Already completed for ~$87 in Claude API costs
+2. **Hosting**: Start with Hetzner VPS ($6/month) for best value
+3. **AI Features**: Use GPT-4o for production (lower cost per query)
+4. **Monitoring**: Set up usage alerts at $20/month threshold
+
+### Cost Optimization Tips
+
+1. **Cache AI responses** for repeated queries
+2. **Use GPT-3.5-turbo** for simple list queries
+3. **Batch similar queries** together
+4. **Monitor token usage** monthly
 
 ---
 
-**Document Version:** 1.0.0
+**Document Version:** 2.0.0
 **Last Updated:** 2026-01-11

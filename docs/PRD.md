@@ -535,9 +535,125 @@ The following features are explicitly out of scope for v1.0 but may be considere
 
 ---
 
+## System Flow Diagrams
+
+### User Journey: Tenant Registration
+
+```mermaid
+flowchart TD
+    A[User Opens App] --> B{Select Action}
+    B -->|Add Tenant| C[Select Building]
+    C --> D[Select Apartment]
+    D --> E{Apartment Status}
+    E -->|Vacant| F[Fill Tenant Form]
+    E -->|Occupied| G[Confirm Replacement]
+    G -->|Yes| H[Set Move-out Date]
+    H --> F
+    G -->|No| D
+    F --> I{Is Owner?}
+    I -->|Yes| J[Save Owner Tenant]
+    I -->|No| K[Enter Owner Details]
+    K --> L[Save Renter Tenant]
+    J --> M[Success]
+    L --> M
+```
+
+### Data Flow: MCP Architecture
+
+```mermaid
+flowchart LR
+    subgraph UI[Web UI Layer]
+        Dashboard[Dashboard]
+        Forms[Tenant Forms]
+        AIQuery[AI Query]
+    end
+
+    subgraph SDK[SDK Layer]
+        Client[TenantSDK]
+    end
+
+    subgraph MCP[MCP Server]
+        Tools[Tools API]
+        Resources[Resources API]
+        Prompts[Prompts API]
+    end
+
+    subgraph DB[Database Layer]
+        Excel[(Excel Database)]
+        Backup[(Backup Files)]
+    end
+
+    subgraph AI[AI Layer]
+        LLM[OpenAI/Claude]
+    end
+
+    Dashboard --> Client
+    Forms --> Client
+    AIQuery --> Client
+    Client --> Tools
+    Client --> Resources
+    Client --> Prompts
+    Tools --> Excel
+    Resources --> Excel
+    Prompts --> LLM
+    Excel --> Backup
+```
+
+### Feature Flow: AI Report Generation
+
+```mermaid
+flowchart TD
+    A[User Query] --> B[Parse Intent]
+    B --> C{Query Type}
+    C -->|Occupancy| D[Get Occupancy Data]
+    C -->|Tenant List| E[Get Tenant Data]
+    C -->|History| F[Get History Data]
+    C -->|Custom| G[Full Data Access]
+    D --> H[Build Prompt]
+    E --> H
+    F --> H
+    G --> H
+    H --> I[Send to LLM]
+    I --> J[Generate Report]
+    J --> K[Format Markdown]
+    K --> L[Display Result]
+    L --> M{Export?}
+    M -->|Yes| N[Generate PDF]
+    M -->|No| O[Done]
+    N --> O
+```
+
+### Building Management Flow
+
+```mermaid
+flowchart LR
+    subgraph Buildings[Residential Complex]
+        B11[Building 11<br/>40 apartments]
+        B13[Building 13<br/>35 apartments]
+        B15[Building 15<br/>40 apartments]
+        B17[Building 17<br/>35 apartments]
+    end
+
+    subgraph Features[Per Building Features]
+        Tenants[Tenant List]
+        Parking[Parking Access]
+        WhatsApp[WhatsApp Groups]
+        PalGate[PalGate Access]
+        History[Tenant History]
+    end
+
+    B11 --> Features
+    B13 --> Features
+    B15 --> Features
+    B17 --> Features
+```
+
+---
+
 **Document Control**
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-01-10 | System | Initial PRD creation |
 | 1.1 | 2026-01-11 | System | Added FR-1.6 (Owner vs Renter flow), FR-1.7 (Tenant replacement), FR-1.8/1.9 (Family members), FR-5.5-5.7 (WhatsApp family members), FR-5B (PalGate access management) |
+| 1.2 | 2026-01-11 | System | Added Mermaid flowchart diagrams for system flows |
