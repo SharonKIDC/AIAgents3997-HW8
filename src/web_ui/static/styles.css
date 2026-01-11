@@ -1,0 +1,278 @@
+/* Tenant Management System - Enhanced Styles */
+
+/* Base transitions */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+.modal-overlay {
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Gradient backgrounds */
+.nav-gradient {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+}
+
+.hero-gradient {
+    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.stat-card-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+.stat-card-green {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+.stat-card-yellow {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+}
+.stat-card-red {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* Building card 3D effect */
+.building-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+.building-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+.building-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+}
+
+/* Building visualization */
+.building-visual {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px;
+    min-height: 100px;
+}
+
+.building-floor {
+    width: 100%;
+    height: 8px;
+    margin-bottom: 2px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.floor-occupied {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+.floor-vacant {
+    background: linear-gradient(90deg, #e5e7eb, #d1d5db);
+}
+
+/* Building icon animation */
+@keyframes buildingPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+.building-icon-animated {
+    animation: buildingPulse 3s ease-in-out infinite;
+}
+
+/* Skyline decoration */
+.skyline-bg {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23dbeafe' fill-opacity='0.5' d='M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,261.3C960,256,1056,224,1152,208C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: bottom;
+    background-size: cover;
+}
+
+/* Footer building silhouette */
+.footer-skyline {
+    position: relative;
+    overflow: hidden;
+}
+.footer-skyline::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 60'%3E%3Cpath fill='%231f2937' d='M0,60 L0,40 L80,40 L80,30 L120,30 L120,45 L200,45 L200,20 L240,20 L240,15 L280,15 L280,35 L360,35 L360,25 L400,25 L400,40 L480,40 L480,10 L520,10 L520,5 L560,5 L560,30 L640,30 L640,40 L720,40 L720,20 L760,20 L760,35 L840,35 L840,15 L880,15 L880,25 L960,25 L960,45 L1040,45 L1040,30 L1080,30 L1080,20 L1120,20 L1120,40 L1200,40 L1200,25 L1240,25 L1240,35 L1320,35 L1320,45 L1400,45 L1400,30 L1440,30 L1440,60 Z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: 1440px 60px;
+}
+
+/* Occupancy bar animation */
+.occupancy-bar {
+    transition: width 1s ease-out;
+}
+
+/* Floor map styles */
+.floor-row {
+    transition: all 0.2s ease;
+}
+.floor-row:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.apartment-cell {
+    transition: all 0.2s ease;
+}
+.apartment-cell:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.apartment-occupied {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-color: #22c55e;
+}
+.apartment-vacant {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-color: #9ca3af;
+}
+
+/* Navigation styles */
+.nav-item {
+    position: relative;
+    overflow: hidden;
+}
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: white;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+.nav-item:hover::after,
+.nav-item.active::after {
+    width: 80%;
+}
+
+/* Logo styles */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Stat card icon */
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Dashboard header */
+.dashboard-header {
+    position: relative;
+    padding: 32px 0;
+    margin-bottom: 24px;
+    background: linear-gradient(180deg, #eff6ff 0%, transparent 100%);
+    border-radius: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .building-card:hover {
+        transform: translateY(-4px);
+    }
+    .footer-skyline::before {
+        height: 40px;
+    }
+}
+
+/* Input focus styles */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    ring: 2;
+    ring-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+/* Button hover effects */
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    transition: all 0.2s ease;
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Table row hover */
+.tenant-row {
+    transition: background-color 0.2s ease;
+}
+.tenant-row:hover {
+    background-color: #f8fafc;
+}
+
+/* Loading animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Window lights effect for building cards */
+.window-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+    padding: 4px;
+}
+.window {
+    width: 8px;
+    height: 10px;
+    border-radius: 1px;
+    transition: all 0.3s ease;
+}
+.window-lit {
+    background: linear-gradient(180deg, #fef08a 0%, #fde047 100%);
+    box-shadow: 0 0 4px rgba(253, 224, 71, 0.5);
+}
+.window-dark {
+    background: #374151;
+}

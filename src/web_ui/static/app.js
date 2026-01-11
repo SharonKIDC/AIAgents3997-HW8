@@ -5,6 +5,105 @@ const { useState, useEffect } = React;
 // API Base URL
 const API_BASE = '';
 
+// SVG Building Icon Component
+function BuildingIcon({ size = 40, floors = 5, occupancyRate = 0, className = '' }) {
+    const litWindows = Math.round((occupancyRate / 100) * (floors * 2));
+    const windows = [];
+    for (let f = 0; f < floors; f++) {
+        for (let w = 0; w < 2; w++) {
+            const idx = f * 2 + w;
+            windows.push({ floor: f, window: w, lit: idx < litWindows });
+        }
+    }
+
+    const height = 20 + floors * 12;
+    const yOffset = 60 - height;
+
+    return (
+        <svg width={size} height={size} viewBox="0 0 60 60" className={className}>
+            {/* Building shadow */}
+            <ellipse cx="32" cy="58" rx="18" ry="3" fill="rgba(0,0,0,0.1)" />
+
+            {/* Building body */}
+            <rect x="12" y={yOffset} width="28" height={height} rx="2" fill="#374151" />
+
+            {/* Roof detail */}
+            <rect x="10" y={yOffset - 3} width="32" height="5" rx="1" fill="#4b5563" />
+            <rect x="22" y={yOffset - 10} width="8" height="8" rx="1" fill="#6b7280" />
+
+            {/* Windows */}
+            {windows.map((w, i) => (
+                <rect
+                    key={i}
+                    x={16 + w.window * 14}
+                    y={yOffset + 6 + (floors - 1 - w.floor) * 12}
+                    width="6"
+                    height="8"
+                    rx="1"
+                    fill={w.lit ? "#fef08a" : "#1f2937"}
+                    style={w.lit ? { filter: 'drop-shadow(0 0 2px rgba(253, 224, 71, 0.6))' } : {}}
+                />
+            ))}
+
+            {/* Door */}
+            <rect x="20" y={yOffset + height - 12} width="12" height="12" rx="1" fill="#1f2937" />
+            <circle cx="29" cy={yOffset + height - 6} r="1" fill="#9ca3af" />
+        </svg>
+    );
+}
+
+// SVG Stats Icons
+function StatsIcon({ type, className = '' }) {
+    const icons = {
+        buildings: (
+            <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+                <path d="M12 2L2 7v15h20V7L12 2zm0 2.3L18.5 7 12 9.7 5.5 7 12 4.3zM4 8.6l7 3.1v9.3H4V8.6zm9 12.4v-9.3l7-3.1v12.4h-7z"/>
+            </svg>
+        ),
+        apartments: (
+            <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H8v-4h4v4zm0-6H8V7h4v4zm6 6h-4v-4h4v4zm0-6h-4V7h4v4z"/>
+            </svg>
+        ),
+        occupied: (
+            <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+        ),
+        vacant: (
+            <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-7-2h2v-4h4v-2h-4V7h-2v4H8v2h4z" transform="rotate(45 12 12)"/>
+            </svg>
+        )
+    };
+    return icons[type] || null;
+}
+
+// Residential Complex Logo
+function ComplexLogo({ className = '' }) {
+    return (
+        <svg viewBox="0 0 48 48" className={className} fill="currentColor">
+            {/* Three buildings */}
+            <rect x="4" y="24" width="10" height="22" rx="1" fill="currentColor" opacity="0.7"/>
+            <rect x="19" y="12" width="10" height="34" rx="1" fill="currentColor"/>
+            <rect x="34" y="20" width="10" height="26" rx="1" fill="currentColor" opacity="0.7"/>
+
+            {/* Windows on center building */}
+            <rect x="21" y="16" width="2" height="3" fill="white" opacity="0.8"/>
+            <rect x="25" y="16" width="2" height="3" fill="white" opacity="0.8"/>
+            <rect x="21" y="22" width="2" height="3" fill="white" opacity="0.8"/>
+            <rect x="25" y="22" width="2" height="3" fill="white" opacity="0.8"/>
+            <rect x="21" y="28" width="2" height="3" fill="white" opacity="0.5"/>
+            <rect x="25" y="28" width="2" height="3" fill="white" opacity="0.8"/>
+            <rect x="21" y="34" width="2" height="3" fill="white" opacity="0.8"/>
+            <rect x="25" y="34" width="2" height="3" fill="white" opacity="0.5"/>
+
+            {/* Roof details */}
+            <rect x="22" y="6" width="4" height="6" rx="0.5" fill="currentColor"/>
+        </svg>
+    );
+}
+
 // API helper functions
 const api = {
     async get(endpoint) {
@@ -49,29 +148,41 @@ function useValidationConfig() {
 // Navigation Component
 function Navigation({ currentView, setCurrentView }) {
     const navItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-        { id: 'tenants', label: 'Tenants', icon: '👥' },
-        { id: 'register', label: 'Register Tenant', icon: '➕' },
-        { id: 'query', label: 'AI Query', icon: '🤖' }
+        { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+        { id: 'tenants', label: 'Tenants', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+        { id: 'register', label: 'Register', icon: 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' },
+        { id: 'query', label: 'AI Query', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' }
     ];
 
     return (
-        <nav className="bg-blue-600 text-white shadow-lg">
+        <nav className="nav-gradient text-white shadow-xl">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
-                    <h1 className="text-xl font-bold">Tenant Management System</h1>
-                    <div className="flex space-x-4">
+                    {/* Logo and Title */}
+                    <div className="logo-container cursor-pointer" onClick={() => setCurrentView('dashboard')}>
+                        <ComplexLogo className="w-10 h-10 text-white" />
+                        <div>
+                            <h1 className="text-lg font-bold leading-tight">Residential Complex</h1>
+                            <p className="text-xs text-blue-200 leading-tight">Tenant Management</p>
+                        </div>
+                    </div>
+
+                    {/* Navigation Items */}
+                    <div className="flex space-x-1">
                         {navItems.map(item => (
                             <button
                                 key={item.id}
                                 onClick={() => setCurrentView(item.id)}
-                                className={`px-4 py-2 rounded-lg transition ${
+                                className={`nav-item px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
                                     currentView === item.id
-                                        ? 'bg-blue-800'
-                                        : 'hover:bg-blue-700'
+                                        ? 'bg-white/20 active'
+                                        : 'hover:bg-white/10'
                                 }`}
                             >
-                                {item.icon} {item.label}
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d={item.icon} />
+                                </svg>
+                                <span className="hidden md:inline">{item.label}</span>
                             </button>
                         ))}
                     </div>
@@ -86,6 +197,7 @@ function Dashboard() {
     const [buildings, setBuildings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedBuilding, setSelectedBuilding] = useState(null);
 
     useEffect(() => {
         loadBuildings();
@@ -103,6 +215,10 @@ function Dashboard() {
         }
     }
 
+    function handleBuildingClick(buildingNumber) {
+        setSelectedBuilding(buildingNumber);
+    }
+
     if (loading) return <LoadingSpinner />;
     if (error) return <ErrorMessage message={error} />;
 
@@ -113,88 +229,383 @@ function Dashboard() {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Dashboard Header */}
+            <div className="dashboard-header text-center px-6">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                    <ComplexLogo className="w-12 h-12 text-blue-600" />
+                    <div>
+                        <h2 className="text-3xl font-bold text-gray-800">Dashboard</h2>
+                        <p className="text-sm text-gray-500">Residential Complex Overview</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 <StatCard title="Total Buildings" value={buildings.length} color="blue" />
                 <StatCard title="Total Apartments" value={totalApartments} color="green" />
                 <StatCard title="Occupied" value={totalOccupied} color="yellow" />
                 <StatCard title="Vacant" value={totalVacant} color="red" />
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Overall Occupancy Rate</h3>
-                <div className="relative pt-1">
-                    <div className="flex mb-2 items-center justify-between">
-                        <span className="text-sm font-semibold text-blue-600">{occupancyRate}%</span>
+
+            {/* Overall Occupancy */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Overall Occupancy Rate</h3>
+                        <p className="text-sm text-gray-500">Across all buildings</p>
                     </div>
-                    <div className="overflow-hidden h-4 text-xs flex rounded bg-blue-100">
+                    <div className="text-right">
+                        <span className={`text-4xl font-bold ${
+                            occupancyRate >= 80 ? 'text-green-500' :
+                            occupancyRate >= 50 ? 'text-yellow-500' :
+                            'text-red-500'
+                        }`}>{occupancyRate}%</span>
+                    </div>
+                </div>
+                <div className="relative">
+                    <div className="overflow-hidden h-4 rounded-full bg-gray-200">
                         <div
                             style={{ width: `${occupancyRate}%` }}
-                            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-500"
+                            className={`occupancy-bar h-full rounded-full ${
+                                occupancyRate >= 80 ? 'bg-gradient-to-r from-green-400 to-green-600' :
+                                occupancyRate >= 50 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' :
+                                'bg-gradient-to-r from-red-400 to-red-600'
+                            }`}
                         />
+                    </div>
+                    {/* Tick marks */}
+                    <div className="flex justify-between mt-1 text-xs text-gray-400">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
                     </div>
                 </div>
             </div>
-            <div className="bg-white rounded-lg shadow">
-                <div className="p-4 border-b">
-                    <h3 className="text-lg font-semibold">Buildings Overview</h3>
+
+            {/* Buildings Grid */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="p-5 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800">Buildings Overview</h3>
+                            <p className="text-sm text-gray-500">Click on a building to view detailed floor map</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="p-4">
+                <div className="p-5">
                     {buildings.length === 0 ? (
-                        <p className="text-gray-500 text-center py-4">No buildings found</p>
+                        <div className="text-center py-12">
+                            <BuildingIcon size={80} floors={5} occupancyRate={0} className="mx-auto mb-4 opacity-30" />
+                            <p className="text-gray-500">No buildings found</p>
+                        </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                             {buildings.map(building => (
-                                <BuildingCard key={building.number} building={building} />
+                                <BuildingCard
+                                    key={building.number}
+                                    building={building}
+                                    onClick={handleBuildingClick}
+                                />
                             ))}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Building Map Modal */}
+            {selectedBuilding && (
+                <BuildingMap
+                    buildingNumber={selectedBuilding}
+                    onClose={() => setSelectedBuilding(null)}
+                />
+            )}
         </div>
     );
 }
 
-function StatCard({ title, value, color }) {
-    const colors = {
-        blue: 'bg-blue-500',
-        green: 'bg-green-500',
-        yellow: 'bg-yellow-500',
-        red: 'bg-red-500'
+function StatCard({ title, value, color, icon }) {
+    const colorClasses = {
+        blue: 'stat-card-blue',
+        green: 'stat-card-green',
+        yellow: 'stat-card-yellow',
+        red: 'stat-card-red'
+    };
+    const iconTypes = {
+        blue: 'buildings',
+        green: 'apartments',
+        yellow: 'occupied',
+        red: 'vacant'
     };
     return (
-        <div className={`${colors[color]} rounded-lg shadow p-6 text-white`}>
-            <h3 className="text-sm font-medium opacity-80">{title}</h3>
-            <p className="text-3xl font-bold mt-2">{value}</p>
+        <div className={`${colorClasses[color]} rounded-xl shadow-lg p-6 text-white relative overflow-hidden`}>
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8"></div>
+            <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-6 -mb-6"></div>
+
+            <div className="relative flex items-start justify-between">
+                <div>
+                    <h3 className="text-sm font-medium text-white/80">{title}</h3>
+                    <p className="text-4xl font-bold mt-2">{value}</p>
+                </div>
+                <div className="stat-icon">
+                    <StatsIcon type={iconTypes[color] || icon} className="w-6 h-6" />
+                </div>
+            </div>
         </div>
     );
 }
 
-function BuildingCard({ building }) {
+function BuildingCard({ building, onClick }) {
     const occupied = building.occupied || 0;
     const total = building.total_apartments;
     const rate = total > 0 ? ((occupied / total) * 100).toFixed(0) : 0;
+    const vacant = total - occupied;
+
+    // Determine building size/floors based on apartment count
+    const floors = Math.min(9, Math.ceil(total / 3));
+
     return (
-        <div className="card bg-gray-50 rounded-lg p-4 border hover:shadow-md">
-            <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-lg">Building {building.number}</h4>
-                <span className="text-sm text-gray-500">{rate}% occupied</span>
+        <div
+            className="building-card bg-white p-5 cursor-pointer shadow-md"
+            onClick={() => onClick && onClick(building.number)}
+        >
+            {/* Header with building number and icon */}
+            <div className="flex items-start justify-between mb-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-2xl font-bold text-gray-800">#{building.number}</span>
+                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                            rate >= 80 ? 'bg-green-100 text-green-700' :
+                            rate >= 50 ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                        }`}>
+                            {rate}%
+                        </span>
+                    </div>
+                    <p className="text-sm text-gray-500">{total} apartments</p>
+                </div>
+
+                {/* Dynamic building icon showing occupancy */}
+                <BuildingIcon size={60} floors={floors} occupancyRate={parseInt(rate)} />
             </div>
-            <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-gray-600">Total Apartments:</span>
-                    <span className="font-medium">{total}</span>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600">{occupied}</p>
+                    <p className="text-xs text-green-600/70">Occupied</p>
                 </div>
-                <div className="flex justify-between">
-                    <span className="text-gray-600">Occupied:</span>
-                    <span className="font-medium text-green-600">{occupied}</span>
-                </div>
-                <div className="flex justify-between">
-                    <span className="text-gray-600">Vacant:</span>
-                    <span className="font-medium text-red-600">{total - occupied}</span>
+                <div className="bg-gray-100 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-gray-500">{vacant}</p>
+                    <p className="text-xs text-gray-500">Vacant</p>
                 </div>
             </div>
-            <div className="mt-3 overflow-hidden h-2 rounded bg-gray-200">
-                <div style={{ width: `${rate}%` }} className="h-full bg-blue-500 transition-all duration-300" />
+
+            {/* Occupancy bar */}
+            <div className="relative">
+                <div className="overflow-hidden h-3 rounded-full bg-gray-200">
+                    <div
+                        style={{ width: `${rate}%` }}
+                        className={`occupancy-bar h-full rounded-full transition-all duration-500 ${
+                            rate >= 80 ? 'bg-gradient-to-r from-green-400 to-green-500' :
+                            rate >= 50 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
+                            'bg-gradient-to-r from-red-400 to-red-500'
+                        }`}
+                    />
+                </div>
+            </div>
+
+            {/* Click hint */}
+            <div className="mt-4 flex items-center justify-center gap-1 text-xs text-blue-600">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                View Floor Map
+            </div>
+        </div>
+    );
+}
+
+// Building Floor Map Modal Component
+function BuildingMap({ buildingNumber, onClose }) {
+    const [floorData, setFloorData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [hoveredApartment, setHoveredApartment] = useState(null);
+
+    useEffect(() => {
+        loadFloorMap();
+    }, [buildingNumber]);
+
+    async function loadFloorMap() {
+        try {
+            setLoading(true);
+            const data = await api.get(`/api/buildings/${buildingNumber}/floor-map`);
+            setFloorData(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl p-8">
+                    <LoadingSpinner />
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl p-6 max-w-md">
+                    <ErrorMessage message={error} />
+                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg">Close</button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                {/* Header */}
+                <div className="p-4 border-b flex items-center justify-between bg-blue-600 text-white">
+                    <h3 className="text-xl font-semibold">Building {buildingNumber} - Floor Map</h3>
+                    <button onClick={onClose} className="text-white hover:text-gray-200 text-2xl">&times;</button>
+                </div>
+
+                {/* Stats bar */}
+                <div className="p-3 bg-gray-100 border-b flex items-center justify-around text-sm">
+                    <span>Total Apartments: <strong>{floorData.total_apartments}</strong></span>
+                    <span>Floors: <strong>{floorData.total_floors}</strong></span>
+                    <span className="text-green-600">Occupied: <strong>{floorData.floors.reduce((sum, f) => sum + f.apartments.filter(a => a.tenant).length, 0)}</strong></span>
+                    <span className="text-red-600">Vacant: <strong>{floorData.floors.reduce((sum, f) => sum + f.apartments.filter(a => !a.tenant).length, 0)}</strong></span>
+                </div>
+
+                {/* Floor visualization */}
+                <div className="flex-1 overflow-y-auto p-4">
+                    <div className="flex flex-col gap-2">
+                        {floorData.floors.map(floor => (
+                            <div key={floor.level} className="flex items-stretch border rounded-lg overflow-hidden">
+                                {/* Floor label */}
+                                <div className="w-20 bg-gray-700 text-white flex items-center justify-center font-bold shrink-0">
+                                    {floor.level === 0 ? 'Ground' : `Floor ${floor.level}`}
+                                </div>
+
+                                {/* Apartments on this floor */}
+                                <div className="flex-1 flex gap-2 p-2 bg-gray-50">
+                                    {floor.apartments.map(apt => (
+                                        <div
+                                            key={apt.apartment_number}
+                                            className={`relative flex-1 min-w-[100px] p-3 rounded-lg border-2 transition-all cursor-pointer ${
+                                                apt.tenant
+                                                    ? 'bg-green-100 border-green-400 hover:border-green-600'
+                                                    : 'bg-gray-200 border-gray-300 hover:border-gray-400'
+                                            }`}
+                                            onMouseEnter={() => setHoveredApartment(apt)}
+                                            onMouseLeave={() => setHoveredApartment(null)}
+                                        >
+                                            <div className="text-center">
+                                                <div className="font-bold text-lg">#{apt.apartment_number}</div>
+                                                {apt.tenant ? (
+                                                    <div className="text-sm mt-1 truncate font-medium text-green-800">
+                                                        {apt.tenant.last_name}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm mt-1 text-gray-500">Vacant</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Hover details panel */}
+                <div className="p-4 border-t bg-gray-50 min-h-[120px]">
+                    {hoveredApartment ? (
+                        hoveredApartment.tenant ? (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <span className="text-xs text-gray-500">Apartment</span>
+                                    <p className="font-semibold">#{hoveredApartment.apartment_number}</p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500">Tenant Name</span>
+                                    <p className="font-semibold">{hoveredApartment.tenant.first_name} {hoveredApartment.tenant.last_name}</p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500">Phone</span>
+                                    <p className="font-semibold">{hoveredApartment.tenant.phone}</p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500">Status</span>
+                                    <p className={`font-semibold ${hoveredApartment.tenant.is_owner ? 'text-green-600' : 'text-blue-600'}`}>
+                                        {hoveredApartment.tenant.is_owner ? 'Owner' : 'Renter'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500">Move-in Date</span>
+                                    <p className="font-semibold">{hoveredApartment.tenant.move_in_date || 'N/A'}</p>
+                                </div>
+                                {hoveredApartment.tenant.storage_number && (
+                                    <div>
+                                        <span className="text-xs text-gray-500">Storage</span>
+                                        <p className="font-semibold">#{hoveredApartment.tenant.storage_number}</p>
+                                    </div>
+                                )}
+                                {(hoveredApartment.tenant.parking_slot_1 || hoveredApartment.tenant.parking_slot_2) && (
+                                    <div>
+                                        <span className="text-xs text-gray-500">Parking</span>
+                                        <p className="font-semibold">
+                                            {[hoveredApartment.tenant.parking_slot_1, hoveredApartment.tenant.parking_slot_2]
+                                                .filter(Boolean)
+                                                .map(p => `#${p}`)
+                                                .join(', ')}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="text-center text-gray-500">
+                                <p className="font-semibold">Apartment #{hoveredApartment.apartment_number}</p>
+                                <p>This apartment is vacant</p>
+                            </div>
+                        )
+                    ) : (
+                        <div className="text-center text-gray-400">
+                            Hover over an apartment to see details
+                        </div>
+                    )}
+                </div>
+
+                {/* Legend */}
+                <div className="p-3 border-t bg-white flex items-center justify-center gap-6 text-sm">
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-green-100 border-2 border-green-400 rounded"></div>
+                        <span>Occupied</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-gray-200 border-2 border-gray-300 rounded"></div>
+                        <span>Vacant</span>
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -1303,9 +1714,23 @@ function App() {
                 <main className="container mx-auto px-4 py-8">
                     {renderView()}
                 </main>
-                <footer className="bg-gray-800 text-white py-4 mt-8">
-                    <div className="container mx-auto px-4 text-center text-sm">
-                        Tenant Management System - Residential Complex Administration
+                <footer className="footer-skyline bg-gray-800 text-white mt-8">
+                    <div className="container mx-auto px-4 py-6">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <ComplexLogo className="w-8 h-8 text-gray-400" />
+                                <div>
+                                    <p className="font-medium">Residential Complex</p>
+                                    <p className="text-xs text-gray-400">Tenant Management System</p>
+                                </div>
+                            </div>
+                            <div className="text-center text-sm text-gray-400">
+                                Buildings 11, 13, 15, 17 - 82 Apartments
+                            </div>
+                            <div className="text-xs text-gray-500">
+                                Powered by MCP Server
+                            </div>
+                        </div>
                     </div>
                 </footer>
             </div>

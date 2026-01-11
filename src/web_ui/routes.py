@@ -300,6 +300,69 @@ async def get_building(building_number: int):
         }
 
 
+@router.get("/buildings/{building_number}/floor-map")
+async def get_building_floor_map(building_number: int):
+    """Get building floor map with tenant information for visualization."""
+    config = get_config()
+    buildings_config = config.get("buildings", [])
+
+    # Find building config
+    building_config = None
+    for b in buildings_config:
+        if b.get("number") == building_number:
+            building_config = b
+            break
+
+    if not building_config:
+        raise HTTPException(404, f"Building {building_number} not found")
+
+    floors_config = building_config.get("floors", [])
+    if not floors_config:
+        raise HTTPException(404, f"Floor configuration not found for building {building_number}")
+
+    # Get all tenants for this building
+    with _get_sdk() as sdk:
+        tenants_list = sdk.get_all_tenants(building_number)
+
+    # Create a map of apartment -> tenant
+    tenant_map = {}
+    for t in tenants_list:
+        apt_num = t.get("apartment_number")
+        tenant_map[apt_num] = {
+            "first_name": t.get("first_name"),
+            "last_name": t.get("last_name"),
+            "full_name": f"{t.get('first_name')} {t.get('last_name')}",
+            "phone": t.get("phone"),
+            "is_owner": t.get("is_owner", True),
+            "move_in_date": t.get("move_in_date"),
+        }
+
+    # Build floor map response
+    floor_map = []
+    for floor in sorted(floors_config, key=lambda f: f.get("level", 0), reverse=True):
+        level = floor.get("level", 0)
+        apartments = floor.get("apartments", [])
+        floor_data = {
+            "level": level,
+            "apartments": []
+        }
+        for apt_num in apartments:
+            tenant = tenant_map.get(apt_num)
+            floor_data["apartments"].append({
+                "apartment_number": apt_num,
+                "occupied": tenant is not None,
+                "tenant": tenant
+            })
+        floor_map.append(floor_data)
+
+    return {
+        "building_number": building_number,
+        "total_apartments": building_config.get("total_apartments", 0),
+        "total_floors": len(floors_config),
+        "floors": floor_map
+    }
+
+
 @router.get("/tenants")
 async def list_tenants(building: Optional[int] = Query(None)):
     """Get all tenants, optionally filtered by building."""
