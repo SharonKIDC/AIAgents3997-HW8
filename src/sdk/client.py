@@ -144,12 +144,17 @@ class TenantSDK:
         if response.is_error():
             return None
         data = response.data
+        # MCP server returns {"building": {...}, "occupancy": {...}, "tenants": [...]}
+        building_data = data.get("building", {})
+        occupancy_data = data.get("occupancy", {})
+        if not building_data:
+            return None
         return BuildingInfo(
-            number=data["number"],
-            total_apartments=data["total_apartments"],
-            occupied=data.get("occupied", 0),
-            vacant=data.get("vacant", 0),
-            occupancy_rate=data.get("occupancy_rate", 0.0),
+            number=building_data["number"],
+            total_apartments=building_data["total_apartments"],
+            occupied=occupancy_data.get("occupied", 0),
+            vacant=occupancy_data.get("vacant", 0),
+            occupancy_rate=occupancy_data.get("occupancy_rate", 0.0),
         )
 
     def get_all_tenants(self, building: int = None) -> List[Dict[str, Any]]:

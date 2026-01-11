@@ -255,10 +255,33 @@ async def get_validation_config():
 @router.get("/buildings")
 async def list_buildings():
     """Get all buildings with occupancy info."""
-    with _get_sdk() as sdk:
-        buildings = sdk.get_buildings()
-        result = [{"number": b.number, "total_apartments": b.total_apartments} for b in buildings]
-        return {"buildings": result}
+    try:
+        with _get_sdk() as sdk:
+            buildings = sdk.get_buildings()
+            result = []
+            for b in buildings:
+                # Get occupancy data for each building
+                occupancy = sdk.get_building_occupancy(b.number)
+                if occupancy:
+                    result.append({
+                        "number": occupancy.number,
+                        "total_apartments": occupancy.total_apartments,
+                        "occupied": occupancy.occupied,
+                        "vacant": occupancy.vacant,
+                        "occupancy_rate": occupancy.occupancy_rate,
+                    })
+                else:
+                    result.append({
+                        "number": b.number,
+                        "total_apartments": b.total_apartments,
+                        "occupied": 0,
+                        "vacant": b.total_apartments,
+                        "occupancy_rate": 0.0,
+                    })
+            return {"buildings": result}
+    except Exception:
+        # Return empty list if MCP server is unavailable
+        return {"buildings": []}
 
 
 @router.get("/buildings/{building_number}")
