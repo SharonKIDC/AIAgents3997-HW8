@@ -959,3 +959,70 @@ class TestEdgeCases:
         data = response.json()
         assert data["success"] is False
         assert "family_member_0" in data["validation_errors"]
+
+
+class TestAIQuery:
+    """Tests for AI query endpoint."""
+
+    def test_query_empty_fails(self, client, mock_sdk):
+        """Test that empty query returns error."""
+        response = client.post("/api/query", json={"query": ""})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data
+
+    def test_query_too_short_fails(self, client, mock_sdk):
+        """Test that query under 3 chars fails."""
+        response = client.post("/api/query", json={"query": "ab"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is False
+        assert "at least 3 characters" in data["error"]
+
+    @patch("src.ai_agent.reporter.ReportAgent")
+    def test_query_success(self, mock_agent_class, client, mock_sdk):
+        """Test successful query."""
+        # Setup mocks
+        mock_agent = MagicMock()
+        mock_agent_class.return_value.__enter__ = Mock(return_value=mock_agent)
+        mock_agent_class.return_value.__exit__ = Mock(return_value=False)
+
+        mock_result = MagicMock()
+        mock_result.content = "# Report\n\nThere are 5 tenants registered."
+        mock_result.metadata = {"report_type": "custom"}
+        mock_agent.process_custom_query.return_value = mock_result
+
+        mock_sdk.get_all_tenants.return_value = [
+            {"building_number": 11, "apartment_number": 1, "first_name": "John", "last_name": "Doe", "phone": "0501234567", "is_owner": True}
+        ]
+        mock_sdk.get_buildings.return_value = [BuildingInfo(number=11, total_apartments=17)]
+
+        response = client.post("/api/query", json={"query": "How many tenants?"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert "response" in data
+        assert "5 tenants" in data["response"]
+
+    @patch("src.ai_agent.reporter.ReportAgent")
+    def test_query_with_building_filter(self, mock_agent_class, client, mock_sdk):
+        """Test query filtered by building."""
+        mock_agent = MagicMock()
+        mock_agent_class.return_value.__enter__ = Mock(return_value=mock_agent)
+        mock_agent_class.return_value.__exit__ = Mock(return_value=False)
+
+        mock_result = MagicMock()
+        mock_result.content = "Building 11 report"
+        mock_result.metadata = {}
+        mock_agent.process_custom_query.return_value = mock_result
+
+        mock_sdk.get_all_tenants.return_value = []
+        mock_sdk.get_buildings.return_value = [BuildingInfo(number=11, total_apartments=17)]
+
+        response = client.post("/api/query", json={"query": "Show tenants", "building": 11})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        # Verify building filter was used
+        mock_sdk.get_all_tenants.assert_called_with(11)

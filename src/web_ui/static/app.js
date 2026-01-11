@@ -51,7 +51,8 @@ function Navigation({ currentView, setCurrentView }) {
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: '📊' },
         { id: 'tenants', label: 'Tenants', icon: '👥' },
-        { id: 'register', label: 'Register Tenant', icon: '➕' }
+        { id: 'register', label: 'Register Tenant', icon: '➕' },
+        { id: 'query', label: 'AI Query', icon: '🤖' }
     ];
 
     return (
@@ -1039,6 +1040,218 @@ function TenantRegistration({ onSuccess }) {
     );
 }
 
+// AI Query Component
+function AIQuery() {
+    const [query, setQuery] = useState('');
+    const [building, setBuilding] = useState('');
+    const [buildings, setBuildings] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [response, setResponse] = useState(null);
+    const [error, setError] = useState(null);
+    const [history, setHistory] = useState([]);
+
+    useEffect(() => {
+        loadBuildings();
+    }, []);
+
+    async function loadBuildings() {
+        try {
+            const data = await api.get('/api/buildings');
+            setBuildings(data.buildings || []);
+        } catch (err) {
+            console.error('Failed to load buildings:', err);
+        }
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        if (!query.trim()) return;
+
+        setLoading(true);
+        setError(null);
+        setResponse(null);
+
+        try {
+            const result = await api.post('/api/query', {
+                query: query.trim(),
+                building: building ? parseInt(building) : null
+            });
+
+            if (result.success) {
+                setResponse(result.response);
+                // Add to history
+                setHistory(prev => [{
+                    query: query.trim(),
+                    response: result.response,
+                    building: building || 'All',
+                    timestamp: new Date().toLocaleTimeString()
+                }, ...prev.slice(0, 9)]); // Keep last 10
+            } else {
+                setError(result.error || 'Failed to process query');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function handleExampleQuery(exampleQuery) {
+        setQuery(exampleQuery);
+    }
+
+    const exampleQueries = [
+        "How many tenants are currently registered?",
+        "List all renters (non-owners)",
+        "Show vacant apartments",
+        "Which tenants moved in this year?",
+        "Generate a contact list for all tenants"
+    ];
+
+    return (
+        <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">AI-Powered Query</h2>
+
+            {/* Query Form */}
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ask a question about tenants
+                        </label>
+                        <textarea
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="e.g., Show me all tenants who moved in during 2024"
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                            rows={3}
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Filter by Building (optional)
+                            </label>
+                            <select
+                                value={building}
+                                onChange={(e) => setBuilding(e.target.value)}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                disabled={loading}
+                            >
+                                <option value="">All Buildings</option>
+                                {buildings.map(b => (
+                                    <option key={b.number} value={b.number}>Building {b.number}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex-shrink-0 pt-6">
+                            <button
+                                type="submit"
+                                disabled={loading || !query.trim()}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                            >
+                                {loading ? (
+                                    <span className="flex items-center">
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Processing...
+                                    </span>
+                                ) : 'Ask AI'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Example queries */}
+                    <div className="border-t pt-4">
+                        <p className="text-sm text-gray-500 mb-2">Try these example queries:</p>
+                        <div className="flex flex-wrap gap-2">
+                            {exampleQueries.map((eq, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleExampleQuery(eq)}
+                                    className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition"
+                                >
+                                    {eq}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+                <div className="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-6">
+                    <strong>Error:</strong> {error}
+                </div>
+            )}
+
+            {/* Response Display */}
+            {response && (
+                <div className="bg-white rounded-lg shadow p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">AI Response</h3>
+                        <button
+                            onClick={() => navigator.clipboard.writeText(response)}
+                            className="text-sm text-blue-600 hover:text-blue-800"
+                        >
+                            Copy to clipboard
+                        </button>
+                    </div>
+                    <div className="prose max-w-none">
+                        <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap font-mono text-sm">
+                            {response}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Query History */}
+            {history.length > 0 && (
+                <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Queries</h3>
+                    <div className="space-y-3">
+                        {history.map((item, idx) => (
+                            <div key={idx} className="border-b pb-3 last:border-0">
+                                <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                                    <span>Building: {item.building}</span>
+                                    <span>{item.timestamp}</span>
+                                </div>
+                                <p className="text-gray-800 font-medium">{item.query}</p>
+                                <button
+                                    onClick={() => {
+                                        setQuery(item.query);
+                                        setBuilding(item.building === 'All' ? '' : item.building);
+                                    }}
+                                    className="text-sm text-blue-600 hover:text-blue-800 mt-1"
+                                >
+                                    Re-run this query
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Info Box */}
+            <div className="mt-6 bg-blue-50 rounded-lg p-4">
+                <h4 className="font-medium text-blue-800 mb-2">About AI Query</h4>
+                <p className="text-sm text-blue-700">
+                    This feature uses AI to answer questions about your tenant data. You can ask
+                    questions in natural language, and the system will analyze the current tenant
+                    database to provide relevant answers. The AI has access to tenant names, contact
+                    information, move-in dates, and building assignments.
+                </p>
+            </div>
+        </div>
+    );
+}
+
 // Loading Spinner Component
 function LoadingSpinner() {
     return (
@@ -1080,6 +1293,7 @@ function App() {
             case 'dashboard': return <Dashboard />;
             case 'tenants': return <TenantList />;
             case 'register': return <TenantRegistration onSuccess={() => setCurrentView('tenants')} />;
+            case 'query': return <AIQuery />;
             default: return <Dashboard />;
         }
     }

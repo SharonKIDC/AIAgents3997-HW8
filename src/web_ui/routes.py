@@ -473,3 +473,86 @@ async def get_tenant_list_report(
         if response.is_error():
             raise HTTPException(500, "Failed to generate report")
         return response.data
+
+
+class AIQueryRequest(BaseModel):
+    """Request model for AI query."""
+
+    query: str
+    building: Optional[int] = None
+
+
+@router.post("/query")
+async def process_ai_query(request: AIQueryRequest):
+    """Process natural language query about tenants.
+
+    Uses AI to analyze tenant data and generate responses to questions like:
+    - "Show me all tenants who moved in during 2024"
+    - "List vacant apartments in building 11"
+    - "Which tenants are renters?"
+    """
+    from src.ai_agent.reporter import ReportAgent
+
+    if not request.query or len(request.query.strip()) < 3:
+        return {
+            "success": False,
+            "error": "Query must be at least 3 characters"
+        }
+
+    try:
+        with ReportAgent() as agent:
+            # Get all tenant data for context
+            with _get_sdk() as sdk:
+                if request.building:
+                    tenants = sdk.get_all_tenants(request.building)
+                else:
+                    tenants = sdk.get_all_tenants()
+                buildings = sdk.get_buildings()
+
+            # Build context with tenant data
+            context = _build_query_context(tenants, buildings, request.building)
+
+            # Process the query with context
+            result = agent.process_custom_query(
+                f"{request.query}\n\nContext:\n{context}"
+            )
+
+            return {
+                "success": True,
+                "response": result.content,
+                "metadata": result.metadata
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def _build_query_context(tenants: List, buildings: List, building_filter: Optional[int]) -> str:
+    """Build context string from tenant and building data."""
+    lines = []
+
+    # Building info
+    lines.append("## Buildings")
+    for b in buildings:
+        lines.append(f"- Building {b.number}: {b.total_apartments} apartments")
+
+    # Tenant data
+    lines.append("\n## Current Tenants")
+    if not tenants:
+        lines.append("No tenants found.")
+    else:
+        for t in tenants:
+            tenant_type = "Owner" if t.get("is_owner", True) else "Renter"
+            move_in = t.get("move_in_date", "N/A")
+            lines.append(
+                f"- Bldg {t.get('building_number')}, Apt {t.get('apartment_number')}: "
+                f"{t.get('first_name')} {t.get('last_name')} ({tenant_type}), "
+                f"Phone: {t.get('phone')}, Move-in: {move_in}"
+            )
+
+    if building_filter:
+        lines.append(f"\n(Filtered to building {building_filter})")
+
+    return "\n".join(lines)
