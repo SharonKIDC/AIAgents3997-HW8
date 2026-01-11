@@ -78,3 +78,34 @@ features:
   enable_parking_management: true
   enable_ai_reports: true
   enable_historical_data: true
+
+# Tenant Registration Validation Rules
+tenant_registration:
+  # Phone number validation
+  phone:
+    min_length: 9
+    max_length: 15
+    pattern: "^[0-9\\-\\+]+$"
+    pattern_description: "Phone must contain only digits, dashes, and plus sign"
+
+  # Name validation
+  name:
+    min_length: 2
+    max_length: 50
+    pattern: "^[a-zA-Z\\u0590-\\u05FF\\s\\-']+$"
+    pattern_description: "Name must contain only letters, spaces, hyphens, and apostrophes"
+
+  # Family members limits
+  family_members:
+    # Maximum members allowed in WhatsApp group (excluding main tenant)
+    max_whatsapp_members: 2
+    # Maximum members allowed for PalGate access (excluding main tenant)
+    max_palgate_members: 4
+    # Main tenant is always included and cannot be disabled
+    main_tenant_always_included: true
+
+  # Vehicle plate validation (for PalGate)
+  vehicle_plate:
+    max_length: 10
+    pattern: "^[0-9\\-]+$"
+    pattern_description: "Vehicle plate must contain only digits and dashes"

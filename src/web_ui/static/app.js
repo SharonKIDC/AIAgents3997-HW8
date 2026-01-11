@@ -18,11 +18,7 @@ const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        const result = await response.json();
-        if (!response.ok) {
-            throw new Error(result.detail || `API Error: ${response.status}`);
-        }
-        return result;
+        return response.json();
     },
     async put(endpoint, data) {
         const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -42,6 +38,13 @@ const api = {
         return response.json();
     }
 };
+
+// Validation Config Context
+const ValidationConfigContext = React.createContext(null);
+
+function useValidationConfig() {
+    return React.useContext(ValidationConfigContext);
+}
 
 // Navigation Component
 function Navigation({ currentView, setCurrentView }) {
@@ -411,56 +414,238 @@ function ConfirmationModal({ title, message, existingTenant, onConfirm, onCancel
     );
 }
 
-// Family Member List Component
-function FamilyMemberList({ title, members, setMembers, showVehicle = false }) {
-    const [newMember, setNewMember] = useState({ first_name: '', last_name: '', phone: '', vehicle_plate: '' });
+// Field Error Display Component
+function FieldError({ errors }) {
+    if (!errors || errors.length === 0) return null;
+    return (
+        <div className="mt-1 text-sm text-red-600">
+            {errors.map((error, idx) => (
+                <div key={idx}>{error}</div>
+            ))}
+        </div>
+    );
+}
+
+// Form Input with Error Support
+function FormInput({ label, required, error, children }) {
+    return (
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+                {label} {required && '*'}
+            </label>
+            {children}
+            <FieldError errors={error} />
+        </div>
+    );
+}
+
+// Family Members List Component - NEW DESIGN with checkboxes
+function FamilyMembersSection({ members, setMembers, mainTenant, validationConfig, errors }) {
+    const [newMember, setNewMember] = useState({
+        first_name: '',
+        last_name: '',
+        phone: '',
+        whatsapp_enabled: false,
+        palgate_enabled: false,
+        vehicle_plate: ''
+    });
+
+    const familyConfig = validationConfig?.family_members || {
+        max_whatsapp_members: 2,
+        max_palgate_members: 4,
+        main_tenant_always_included: true
+    };
+
+    // Count enabled members (excluding main tenant)
+    const whatsappCount = members.filter(m => m.whatsapp_enabled).length;
+    const palgateCount = members.filter(m => m.palgate_enabled).length;
 
     function addMember() {
         if (!newMember.first_name || !newMember.phone) return;
         setMembers([...members, { ...newMember }]);
-        setNewMember({ first_name: '', last_name: '', phone: '', vehicle_plate: '' });
+        setNewMember({
+            first_name: '',
+            last_name: '',
+            phone: '',
+            whatsapp_enabled: false,
+            palgate_enabled: false,
+            vehicle_plate: ''
+        });
     }
 
     function removeMember(index) {
         setMembers(members.filter((_, i) => i !== index));
     }
 
+    function toggleWhatsapp(index) {
+        const member = members[index];
+        if (!member.whatsapp_enabled && whatsappCount >= familyConfig.max_whatsapp_members) {
+            return; // Can't add more
+        }
+        const updated = [...members];
+        updated[index] = { ...member, whatsapp_enabled: !member.whatsapp_enabled };
+        setMembers(updated);
+    }
+
+    function togglePalgate(index) {
+        const member = members[index];
+        if (!member.palgate_enabled && palgateCount >= familyConfig.max_palgate_members) {
+            return; // Can't add more
+        }
+        const updated = [...members];
+        updated[index] = { ...member, palgate_enabled: !member.palgate_enabled };
+        setMembers(updated);
+    }
+
+    function updateVehiclePlate(index, plate) {
+        const updated = [...members];
+        updated[index] = { ...updated[index], vehicle_plate: plate };
+        setMembers(updated);
+    }
+
     return (
         <div className="border rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-3">{title}</h4>
-            {members.length > 0 && (
-                <div className="space-y-2 mb-4">
-                    {members.map((member, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-gray-50 rounded p-2">
-                            <div>
-                                <span className="font-medium">{member.first_name} {member.last_name}</span>
-                                <span className="text-gray-500 ml-2">{member.phone}</span>
-                                {showVehicle && member.vehicle_plate && <span className="text-gray-400 ml-2">({member.vehicle_plate})</span>}
-                            </div>
-                            <button type="button" onClick={() => removeMember(idx)} className="text-red-500 hover:text-red-700">&times;</button>
-                        </div>
-                    ))}
+            <h4 className="font-medium text-gray-800 mb-2">Family Members</h4>
+            <p className="text-sm text-gray-500 mb-4">
+                Add family members for WhatsApp group and/or PalGate access.
+                Main tenant is always included in both.
+            </p>
+
+            {/* Limits info */}
+            <div className="bg-blue-50 rounded p-3 mb-4 text-sm">
+                <div className="flex justify-between">
+                    <span>WhatsApp group: {whatsappCount + 1}/{familyConfig.max_whatsapp_members + 1} members</span>
+                    <span>PalGate access: {palgateCount + 1}/{familyConfig.max_palgate_members + 1} members</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">(+1 includes main tenant who is always enabled)</div>
+            </div>
+
+            {errors && <FieldError errors={errors} />}
+
+            {/* Member list header */}
+            <div className="bg-gray-100 rounded-t p-2 grid grid-cols-12 gap-2 text-xs font-medium text-gray-600 border-b">
+                <div className="col-span-3">Name</div>
+                <div className="col-span-2">Phone</div>
+                <div className="col-span-2 text-center">WhatsApp</div>
+                <div className="col-span-2 text-center">PalGate</div>
+                <div className="col-span-2">Vehicle Plate</div>
+                <div className="col-span-1"></div>
+            </div>
+
+            {/* Main tenant row (always first, always enabled) */}
+            {mainTenant.first_name && (
+                <div className="bg-green-50 border-l-4 border-green-500 p-2 grid grid-cols-12 gap-2 items-center text-sm">
+                    <div className="col-span-3 font-medium">
+                        {mainTenant.first_name} {mainTenant.last_name}
+                        <span className="text-xs text-green-600 ml-1">(Main)</span>
+                    </div>
+                    <div className="col-span-2 text-gray-600">{mainTenant.phone}</div>
+                    <div className="col-span-2 text-center">
+                        <input type="checkbox" checked disabled className="w-4 h-4 text-blue-600 cursor-not-allowed" />
+                    </div>
+                    <div className="col-span-2 text-center">
+                        <input type="checkbox" checked disabled className="w-4 h-4 text-blue-600 cursor-not-allowed" />
+                    </div>
+                    <div className="col-span-2 text-gray-400">-</div>
+                    <div className="col-span-1"></div>
                 </div>
             )}
-            <div className="grid grid-cols-2 gap-2">
-                <input type="text" placeholder="First Name" value={newMember.first_name} onChange={(e) => setNewMember({...newMember, first_name: e.target.value})} className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="text" placeholder="Last Name" value={newMember.last_name} onChange={(e) => setNewMember({...newMember, last_name: e.target.value})} className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="tel" placeholder="Phone" value={newMember.phone} onChange={(e) => setNewMember({...newMember, phone: e.target.value})} className="px-3 py-2 border rounded-lg text-sm" />
-                {showVehicle ? (
-                    <input type="text" placeholder="Vehicle Plate (opt)" value={newMember.vehicle_plate} onChange={(e) => setNewMember({...newMember, vehicle_plate: e.target.value})} className="px-3 py-2 border rounded-lg text-sm" />
-                ) : (
-                    <button type="button" onClick={addMember} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">+ Add</button>
-                )}
+
+            {/* Family member rows */}
+            {members.map((member, idx) => (
+                <div key={idx} className="border-b p-2 grid grid-cols-12 gap-2 items-center text-sm hover:bg-gray-50">
+                    <div className="col-span-3">
+                        {member.first_name} {member.last_name}
+                    </div>
+                    <div className="col-span-2 text-gray-600">{member.phone}</div>
+                    <div className="col-span-2 text-center">
+                        <input
+                            type="checkbox"
+                            checked={member.whatsapp_enabled}
+                            onChange={() => toggleWhatsapp(idx)}
+                            disabled={!member.whatsapp_enabled && whatsappCount >= familyConfig.max_whatsapp_members}
+                            className="w-4 h-4 text-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                    </div>
+                    <div className="col-span-2 text-center">
+                        <input
+                            type="checkbox"
+                            checked={member.palgate_enabled}
+                            onChange={() => togglePalgate(idx)}
+                            disabled={!member.palgate_enabled && palgateCount >= familyConfig.max_palgate_members}
+                            className="w-4 h-4 text-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                    </div>
+                    <div className="col-span-2">
+                        {member.palgate_enabled ? (
+                            <input
+                                type="text"
+                                value={member.vehicle_plate || ''}
+                                onChange={(e) => updateVehiclePlate(idx, e.target.value)}
+                                placeholder="Plate #"
+                                className="w-full px-2 py-1 border rounded text-xs"
+                            />
+                        ) : (
+                            <span className="text-gray-400">-</span>
+                        )}
+                    </div>
+                    <div className="col-span-1 text-right">
+                        <button
+                            type="button"
+                            onClick={() => removeMember(idx)}
+                            className="text-red-500 hover:text-red-700 text-lg"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                </div>
+            ))}
+
+            {/* Add new member form */}
+            <div className="mt-4 border-t pt-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">Add Family Member:</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <input
+                        type="text"
+                        placeholder="First Name *"
+                        value={newMember.first_name}
+                        onChange={(e) => setNewMember({...newMember, first_name: e.target.value})}
+                        className="px-3 py-2 border rounded-lg text-sm"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Last Name"
+                        value={newMember.last_name}
+                        onChange={(e) => setNewMember({...newMember, last_name: e.target.value})}
+                        className="px-3 py-2 border rounded-lg text-sm"
+                    />
+                    <input
+                        type="tel"
+                        placeholder="Phone *"
+                        value={newMember.phone}
+                        onChange={(e) => setNewMember({...newMember, phone: e.target.value})}
+                        className="px-3 py-2 border rounded-lg text-sm"
+                    />
+                    <button
+                        type="button"
+                        onClick={addMember}
+                        disabled={!newMember.first_name || !newMember.phone}
+                        className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                        + Add Member
+                    </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                    After adding, use checkboxes to enable WhatsApp/PalGate access for each member.
+                </p>
             </div>
-            {showVehicle && (
-                <button type="button" onClick={addMember} className="mt-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 w-full">+ Add Member</button>
-            )}
         </div>
     );
 }
 
 // Tenant Registration Form
 function TenantRegistration({ onSuccess }) {
+    const validationConfig = useValidationConfig();
     const [buildings, setBuildings] = useState([]);
     const [formData, setFormData] = useState({
         building_number: '',
@@ -474,11 +659,11 @@ function TenantRegistration({ onSuccess }) {
         storage_number: '',
         parking_slot_1: '',
         parking_slot_2: '',
-        whatsapp_members: [],
-        palgate_members: []
+        family_members: []
     });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [generalError, setGeneralError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [confirmReplace, setConfirmReplace] = useState(null);
 
@@ -492,14 +677,72 @@ function TenantRegistration({ onSuccess }) {
                 setFormData(f => ({ ...f, building_number: data.buildings[0].number }));
             }
         } catch (err) {
-            setError(err.message);
+            setGeneralError(err.message);
         }
+    }
+
+    // Client-side validation
+    function validateForm() {
+        const errors = {};
+        const nameConfig = validationConfig?.name || { min_length: 2, max_length: 50 };
+        const phoneConfig = validationConfig?.phone || { min_length: 9, max_length: 15 };
+        const familyConfig = validationConfig?.family_members || { max_whatsapp_members: 2, max_palgate_members: 4 };
+
+        // Validate tenant name
+        if (formData.first_name.length < nameConfig.min_length) {
+            errors.first_name = [`First name must be at least ${nameConfig.min_length} characters`];
+        }
+        if (formData.last_name.length < nameConfig.min_length) {
+            errors.last_name = [`Last name must be at least ${nameConfig.min_length} characters`];
+        }
+
+        // Validate phone
+        if (formData.phone.length < phoneConfig.min_length) {
+            errors.phone = [`Phone must be at least ${phoneConfig.min_length} characters`];
+        }
+
+        // Validate owner info for renters
+        if (!formData.is_owner) {
+            if (!formData.owner_info.first_name || formData.owner_info.first_name.length < nameConfig.min_length) {
+                errors.owner_first_name = [`Owner first name must be at least ${nameConfig.min_length} characters`];
+            }
+            if (!formData.owner_info.last_name || formData.owner_info.last_name.length < nameConfig.min_length) {
+                errors.owner_last_name = [`Owner last name must be at least ${nameConfig.min_length} characters`];
+            }
+            if (!formData.owner_info.phone || formData.owner_info.phone.length < phoneConfig.min_length) {
+                errors.owner_phone = [`Owner phone must be at least ${phoneConfig.min_length} characters`];
+            }
+        }
+
+        // Validate family member limits
+        const whatsappCount = formData.family_members.filter(m => m.whatsapp_enabled).length;
+        const palgateCount = formData.family_members.filter(m => m.palgate_enabled).length;
+
+        if (whatsappCount > familyConfig.max_whatsapp_members) {
+            errors.family_members = errors.family_members || [];
+            errors.family_members.push(`Maximum ${familyConfig.max_whatsapp_members} additional WhatsApp members allowed`);
+        }
+        if (palgateCount > familyConfig.max_palgate_members) {
+            errors.family_members = errors.family_members || [];
+            errors.family_members.push(`Maximum ${familyConfig.max_palgate_members} additional PalGate members allowed`);
+        }
+
+        return errors;
     }
 
     async function handleSubmit(e, replaceExisting = false) {
         if (e) e.preventDefault();
+
+        // Client-side validation first
+        const clientErrors = validateForm();
+        if (Object.keys(clientErrors).length > 0) {
+            setFieldErrors(clientErrors);
+            return;
+        }
+
         setLoading(true);
-        setError(null);
+        setFieldErrors({});
+        setGeneralError(null);
         setSuccess(false);
 
         try {
@@ -514,8 +757,7 @@ function TenantRegistration({ onSuccess }) {
                 storage_number: formData.storage_number ? parseInt(formData.storage_number) : null,
                 parking_slot_1: formData.parking_slot_1 ? parseInt(formData.parking_slot_1) : null,
                 parking_slot_2: formData.parking_slot_2 ? parseInt(formData.parking_slot_2) : null,
-                whatsapp_members: formData.whatsapp_members,
-                palgate_members: formData.palgate_members,
+                family_members: formData.family_members,
                 replace_existing: replaceExisting
             };
 
@@ -533,13 +775,23 @@ function TenantRegistration({ onSuccess }) {
                 return;
             }
 
+            // Check for validation errors from server
+            if (!result.success && result.validation_errors) {
+                setFieldErrors(result.validation_errors);
+                if (result.validation_errors._general) {
+                    setGeneralError(result.validation_errors._general.join(', '));
+                }
+                setLoading(false);
+                return;
+            }
+
             if (result.success) {
                 setSuccess(true);
                 resetForm();
                 if (onSuccess) onSuccess();
             }
         } catch (err) {
-            setError(err.message);
+            setGeneralError(err.message);
         } finally {
             setLoading(false);
         }
@@ -558,9 +810,9 @@ function TenantRegistration({ onSuccess }) {
             storage_number: '',
             parking_slot_1: '',
             parking_slot_2: '',
-            whatsapp_members: [],
-            palgate_members: []
+            family_members: []
         });
+        setFieldErrors({});
     }
 
     function handleConfirmReplace() {
@@ -568,12 +820,17 @@ function TenantRegistration({ onSuccess }) {
         handleSubmit(null, true);
     }
 
+    const inputClass = (fieldName) => {
+        const hasError = fieldErrors[fieldName];
+        return `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${hasError ? 'border-red-500 bg-red-50' : ''}`;
+    };
+
     return (
         <div className="max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Register New Tenant</h2>
 
             <div className="bg-white rounded-lg shadow p-6">
-                {error && <ErrorMessage message={error} />}
+                {generalError && <ErrorMessage message={generalError} />}
                 {success && (
                     <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
                         Tenant registered successfully!
@@ -642,18 +899,36 @@ function TenantRegistration({ onSuccess }) {
                     <div className="border-b pb-4">
                         <h3 className="text-lg font-medium mb-4">Tenant Information</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                                <input type="text" value={formData.first_name} onChange={(e) => setFormData({...formData, first_name: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                                <input type="text" value={formData.last_name} onChange={(e) => setFormData({...formData, last_name: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required />
-                            </div>
+                            <FormInput label="First Name" required error={fieldErrors.first_name}>
+                                <input
+                                    type="text"
+                                    value={formData.first_name}
+                                    onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                                    className={inputClass('first_name')}
+                                    required
+                                />
+                            </FormInput>
+                            <FormInput label="Last Name" required error={fieldErrors.last_name}>
+                                <input
+                                    type="text"
+                                    value={formData.last_name}
+                                    onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                                    className={inputClass('last_name')}
+                                    required
+                                />
+                            </FormInput>
                         </div>
                         <div className="mt-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                            <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required placeholder="e.g., 050-1234567" />
+                            <FormInput label="Phone" required error={fieldErrors.phone}>
+                                <input
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                    className={inputClass('phone')}
+                                    required
+                                    placeholder="e.g., 050-1234567"
+                                />
+                            </FormInput>
                         </div>
                     </div>
 
@@ -661,19 +936,38 @@ function TenantRegistration({ onSuccess }) {
                     {!formData.is_owner && (
                         <div className="border-b pb-4 bg-yellow-50 -mx-6 px-6 py-4">
                             <h3 className="text-lg font-medium mb-4 text-yellow-800">Owner Information (Required for Renters)</h3>
+                            {fieldErrors.owner_info && <FieldError errors={fieldErrors.owner_info} />}
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Owner First Name *</label>
-                                    <input type="text" value={formData.owner_info.first_name} onChange={(e) => setFormData({...formData, owner_info: {...formData.owner_info, first_name: e.target.value}})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Owner Last Name *</label>
-                                    <input type="text" value={formData.owner_info.last_name} onChange={(e) => setFormData({...formData, owner_info: {...formData.owner_info, last_name: e.target.value}})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required />
-                                </div>
+                                <FormInput label="Owner First Name" required error={fieldErrors.owner_first_name}>
+                                    <input
+                                        type="text"
+                                        value={formData.owner_info.first_name}
+                                        onChange={(e) => setFormData({...formData, owner_info: {...formData.owner_info, first_name: e.target.value}})}
+                                        className={inputClass('owner_first_name')}
+                                        required
+                                    />
+                                </FormInput>
+                                <FormInput label="Owner Last Name" required error={fieldErrors.owner_last_name}>
+                                    <input
+                                        type="text"
+                                        value={formData.owner_info.last_name}
+                                        onChange={(e) => setFormData({...formData, owner_info: {...formData.owner_info, last_name: e.target.value}})}
+                                        className={inputClass('owner_last_name')}
+                                        required
+                                    />
+                                </FormInput>
                             </div>
                             <div className="mt-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Owner Phone *</label>
-                                <input type="tel" value={formData.owner_info.phone} onChange={(e) => setFormData({...formData, owner_info: {...formData.owner_info, phone: e.target.value}})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required placeholder="e.g., 050-1234567" />
+                                <FormInput label="Owner Phone" required error={fieldErrors.owner_phone}>
+                                    <input
+                                        type="tel"
+                                        value={formData.owner_info.phone}
+                                        onChange={(e) => setFormData({...formData, owner_info: {...formData.owner_info, phone: e.target.value}})}
+                                        className={inputClass('owner_phone')}
+                                        required
+                                        placeholder="e.g., 050-1234567"
+                                    />
+                                </FormInput>
                             </div>
                         </div>
                     )}
@@ -706,23 +1000,20 @@ function TenantRegistration({ onSuccess }) {
                         </div>
                     </div>
 
-                    {/* Family Members */}
+                    {/* Family Members - NEW DESIGN */}
                     <div className="border-b pb-4">
-                        <h3 className="text-lg font-medium mb-4">Family Members (Optional)</h3>
-                        <p className="text-sm text-gray-500 mb-4">Add family members for WhatsApp group and gate access</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FamilyMemberList
-                                title="WhatsApp Group Members"
-                                members={formData.whatsapp_members}
-                                setMembers={(m) => setFormData({...formData, whatsapp_members: m})}
-                            />
-                            <FamilyMemberList
-                                title="PalGate Access (Gate Entry)"
-                                members={formData.palgate_members}
-                                setMembers={(m) => setFormData({...formData, palgate_members: m})}
-                                showVehicle={true}
-                            />
-                        </div>
+                        <h3 className="text-lg font-medium mb-4">Family Members</h3>
+                        <FamilyMembersSection
+                            members={formData.family_members}
+                            setMembers={(m) => setFormData({...formData, family_members: m})}
+                            mainTenant={{
+                                first_name: formData.first_name,
+                                last_name: formData.last_name,
+                                phone: formData.phone
+                            }}
+                            validationConfig={validationConfig}
+                            errors={fieldErrors.family_members}
+                        />
                     </div>
 
                     {/* Submit */}
@@ -769,6 +1060,20 @@ function ErrorMessage({ message }) {
 // Main App Component
 function App() {
     const [currentView, setCurrentView] = useState('dashboard');
+    const [validationConfig, setValidationConfig] = useState(null);
+
+    // Fetch validation config on mount
+    useEffect(() => {
+        async function fetchConfig() {
+            try {
+                const config = await api.get('/api/config/validation');
+                setValidationConfig(config);
+            } catch (err) {
+                console.error('Failed to load validation config:', err);
+            }
+        }
+        fetchConfig();
+    }, []);
 
     function renderView() {
         switch (currentView) {
@@ -780,17 +1085,19 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <Navigation currentView={currentView} setCurrentView={setCurrentView} />
-            <main className="container mx-auto px-4 py-8">
-                {renderView()}
-            </main>
-            <footer className="bg-gray-800 text-white py-4 mt-8">
-                <div className="container mx-auto px-4 text-center text-sm">
-                    Tenant Management System - Residential Complex Administration
-                </div>
-            </footer>
-        </div>
+        <ValidationConfigContext.Provider value={validationConfig}>
+            <div className="min-h-screen bg-gray-100">
+                <Navigation currentView={currentView} setCurrentView={setCurrentView} />
+                <main className="container mx-auto px-4 py-8">
+                    {renderView()}
+                </main>
+                <footer className="bg-gray-800 text-white py-4 mt-8">
+                    <div className="container mx-auto px-4 text-center text-sm">
+                        Tenant Management System - Residential Complex Administration
+                    </div>
+                </footer>
+            </div>
+        </ValidationConfigContext.Provider>
     );
 }
 

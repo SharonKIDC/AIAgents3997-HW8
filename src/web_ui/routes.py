@@ -3,17 +3,126 @@
 Provides REST endpoints optimized for the React UI components.
 """
 
+import re
 from datetime import date, timedelta
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 
 from src.sdk import TenantSDK
+from src.config import get_config
 from src.exceptions import ValidationError
 
 
 router = APIRouter(prefix="/api", tags=["web-ui"])
+
+
+def _get_validation_config() -> Dict[str, Any]:
+    """Get validation configuration."""
+    config = get_config()
+    return {
+        "phone": {
+            "min_length": config.get("tenant_registration.phone.min_length", 9),
+            "max_length": config.get("tenant_registration.phone.max_length", 15),
+            "pattern": config.get("tenant_registration.phone.pattern", r"^[0-9\-\+]+$"),
+            "pattern_description": config.get(
+                "tenant_registration.phone.pattern_description",
+                "Phone must contain only digits, dashes, and plus sign"
+            )
+        },
+        "name": {
+            "min_length": config.get("tenant_registration.name.min_length", 2),
+            "max_length": config.get("tenant_registration.name.max_length", 50),
+            "pattern": config.get(
+                "tenant_registration.name.pattern",
+                r"^[a-zA-Z\u0590-\u05FF\s\-']+$"
+            ),
+            "pattern_description": config.get(
+                "tenant_registration.name.pattern_description",
+                "Name must contain only letters, spaces, hyphens, and apostrophes"
+            )
+        },
+        "family_members": {
+            "max_whatsapp_members": config.get(
+                "tenant_registration.family_members.max_whatsapp_members", 2
+            ),
+            "max_palgate_members": config.get(
+                "tenant_registration.family_members.max_palgate_members", 4
+            ),
+            "main_tenant_always_included": config.get(
+                "tenant_registration.family_members.main_tenant_always_included", True
+            )
+        },
+        "vehicle_plate": {
+            "max_length": config.get("tenant_registration.vehicle_plate.max_length", 10),
+            "pattern": config.get(
+                "tenant_registration.vehicle_plate.pattern",
+                r"^[0-9\-]+$"
+            ),
+            "pattern_description": config.get(
+                "tenant_registration.vehicle_plate.pattern_description",
+                "Vehicle plate must contain only digits and dashes"
+            )
+        }
+    }
+
+
+def _validate_name(name: str, field_name: str, config: Dict) -> List[str]:
+    """Validate a name field and return errors."""
+    errors = []
+    name_config = config["name"]
+
+    if len(name) < name_config["min_length"]:
+        errors.append(f"{field_name} must be at least {name_config['min_length']} characters")
+    if len(name) > name_config["max_length"]:
+        errors.append(f"{field_name} must be at most {name_config['max_length']} characters")
+    if not re.match(name_config["pattern"], name):
+        errors.append(f"{field_name}: {name_config['pattern_description']}")
+
+    return errors
+
+
+def _validate_phone(phone: str, field_name: str, config: Dict) -> List[str]:
+    """Validate a phone field and return errors."""
+    errors = []
+    phone_config = config["phone"]
+
+    if len(phone) < phone_config["min_length"]:
+        errors.append(f"{field_name} must be at least {phone_config['min_length']} characters")
+    if len(phone) > phone_config["max_length"]:
+        errors.append(f"{field_name} must be at most {phone_config['max_length']} characters")
+    if not re.match(phone_config["pattern"], phone):
+        errors.append(f"{field_name}: {phone_config['pattern_description']}")
+
+    return errors
+
+
+def _validate_vehicle_plate(plate: str, config: Dict) -> List[str]:
+    """Validate vehicle plate and return errors."""
+    if not plate:
+        return []
+
+    errors = []
+    plate_config = config["vehicle_plate"]
+
+    if len(plate) > plate_config["max_length"]:
+        errors.append(f"Vehicle plate must be at most {plate_config['max_length']} characters")
+    if not re.match(plate_config["pattern"], plate):
+        errors.append(plate_config["pattern_description"])
+
+    return errors
+
+
+class FamilyMember(BaseModel):
+    """Family member with WhatsApp and PalGate flags."""
+
+    first_name: str
+    last_name: str
+    phone: str
+    whatsapp_enabled: bool = False
+    palgate_enabled: bool = False
+    vehicle_plate: Optional[str] = None
 
 
 class OwnerInfoCreate(BaseModel):
@@ -22,15 +131,6 @@ class OwnerInfoCreate(BaseModel):
     first_name: str
     last_name: str
     phone: str
-
-
-class FamilyMember(BaseModel):
-    """Family member for WhatsApp/PalGate."""
-
-    first_name: str
-    last_name: str
-    phone: str
-    vehicle_plate: Optional[str] = None
 
 
 class TenantCreate(BaseModel):
@@ -47,8 +147,7 @@ class TenantCreate(BaseModel):
     storage_number: Optional[int] = None
     parking_slot_1: Optional[int] = None
     parking_slot_2: Optional[int] = None
-    whatsapp_members: List[FamilyMember] = []
-    palgate_members: List[FamilyMember] = []
+    family_members: List[FamilyMember] = []
     replace_existing: bool = False
 
 
@@ -65,13 +164,100 @@ class TenantUpdate(BaseModel):
     parking_slot_2: Optional[int] = None
     whatsapp_group_enabled: Optional[bool] = None
     palgate_access_enabled: Optional[bool] = None
-    whatsapp_members: Optional[List[FamilyMember]] = None
-    palgate_members: Optional[List[FamilyMember]] = None
+    family_members: Optional[List[FamilyMember]] = None
 
 
 def _get_sdk() -> TenantSDK:
     """Get SDK instance."""
     return TenantSDK()
+
+
+def _validate_tenant_data(tenant: TenantCreate) -> Dict[str, List[str]]:
+    """Validate tenant data and return field-specific errors."""
+    config = _get_validation_config()
+    errors: Dict[str, List[str]] = {}
+
+    # Validate tenant name
+    first_name_errors = _validate_name(tenant.first_name, "First name", config)
+    if first_name_errors:
+        errors["first_name"] = first_name_errors
+
+    last_name_errors = _validate_name(tenant.last_name, "Last name", config)
+    if last_name_errors:
+        errors["last_name"] = last_name_errors
+
+    # Validate tenant phone
+    phone_errors = _validate_phone(tenant.phone, "Phone", config)
+    if phone_errors:
+        errors["phone"] = phone_errors
+
+    # Validate owner info for renters
+    if not tenant.is_owner:
+        if not tenant.owner_info:
+            errors["owner_info"] = ["Owner information is required for renters"]
+        else:
+            owner_fn_errors = _validate_name(
+                tenant.owner_info.first_name, "Owner first name", config
+            )
+            if owner_fn_errors:
+                errors["owner_first_name"] = owner_fn_errors
+
+            owner_ln_errors = _validate_name(
+                tenant.owner_info.last_name, "Owner last name", config
+            )
+            if owner_ln_errors:
+                errors["owner_last_name"] = owner_ln_errors
+
+            owner_phone_errors = _validate_phone(
+                tenant.owner_info.phone, "Owner phone", config
+            )
+            if owner_phone_errors:
+                errors["owner_phone"] = owner_phone_errors
+
+    # Validate family members
+    family_config = config["family_members"]
+    whatsapp_count = sum(1 for m in tenant.family_members if m.whatsapp_enabled)
+    palgate_count = sum(1 for m in tenant.family_members if m.palgate_enabled)
+
+    if whatsapp_count > family_config["max_whatsapp_members"]:
+        errors["family_members"] = errors.get("family_members", [])
+        errors["family_members"].append(
+            f"Maximum {family_config['max_whatsapp_members']} additional WhatsApp members allowed"
+        )
+
+    if palgate_count > family_config["max_palgate_members"]:
+        errors["family_members"] = errors.get("family_members", [])
+        errors["family_members"].append(
+            f"Maximum {family_config['max_palgate_members']} additional PalGate members allowed"
+        )
+
+    # Validate each family member
+    for i, member in enumerate(tenant.family_members):
+        member_errors = []
+
+        fn_errors = _validate_name(member.first_name, "First name", config)
+        member_errors.extend(fn_errors)
+
+        ln_errors = _validate_name(member.last_name, "Last name", config)
+        member_errors.extend(ln_errors)
+
+        ph_errors = _validate_phone(member.phone, "Phone", config)
+        member_errors.extend(ph_errors)
+
+        if member.vehicle_plate:
+            vp_errors = _validate_vehicle_plate(member.vehicle_plate, config)
+            member_errors.extend(vp_errors)
+
+        if member_errors:
+            errors[f"family_member_{i}"] = member_errors
+
+    return errors
+
+
+@router.get("/config/validation")
+async def get_validation_config():
+    """Get validation configuration for frontend."""
+    return _get_validation_config()
 
 
 @router.get("/buildings")
@@ -129,7 +315,16 @@ async def get_tenant(building: int, apartment: int):
 
 @router.post("/tenants")
 async def create_tenant(tenant: TenantCreate):
-    """Create a new tenant."""
+    """Create a new tenant with validation."""
+    # Validate all fields first
+    validation_errors = _validate_tenant_data(tenant)
+    if validation_errors:
+        return {
+            "success": False,
+            "validation_errors": validation_errors,
+            "message": "Please fix the validation errors"
+        }
+
     try:
         move_in = date.today()
         if tenant.move_in_date:
@@ -160,10 +355,6 @@ async def create_tenant(tenant: TenantCreate):
                     move_out_date=move_out
                 )
 
-            # Validate owner info for renters
-            if not tenant.is_owner and not tenant.owner_info:
-                raise HTTPException(400, "Owner information required for renters")
-
             # Build owner_info dict if provided
             owner_info = None
             if tenant.owner_info:
@@ -172,6 +363,21 @@ async def create_tenant(tenant: TenantCreate):
                     "last_name": tenant.owner_info.last_name,
                     "phone": tenant.owner_info.phone
                 }
+
+            # Build WhatsApp and PalGate member lists from family members
+            whatsapp_members = [
+                {"first_name": m.first_name, "last_name": m.last_name, "phone": m.phone}
+                for m in tenant.family_members if m.whatsapp_enabled
+            ]
+            palgate_members = [
+                {
+                    "first_name": m.first_name,
+                    "last_name": m.last_name,
+                    "phone": m.phone,
+                    "vehicle_plate": m.vehicle_plate
+                }
+                for m in tenant.family_members if m.palgate_enabled
+            ]
 
             result = sdk.create_tenant(
                 building=tenant.building_number,
@@ -185,12 +391,22 @@ async def create_tenant(tenant: TenantCreate):
                 parking_slot_1=tenant.parking_slot_1,
                 parking_slot_2=tenant.parking_slot_2,
                 owner_info=owner_info,
-                whatsapp_members=[m.model_dump() for m in tenant.whatsapp_members],
-                palgate_members=[m.model_dump() for m in tenant.palgate_members]
+                whatsapp_members=whatsapp_members,
+                palgate_members=palgate_members
             )
             return {"success": True, "data": result}
     except ValidationError as e:
-        raise HTTPException(400, str(e)) from e
+        return {
+            "success": False,
+            "validation_errors": {"_general": [str(e)]},
+            "message": str(e)
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "validation_errors": {"_general": [str(e)]},
+            "message": "An unexpected error occurred"
+        }
 
 
 @router.patch("/tenants/{building}/{apartment}")
