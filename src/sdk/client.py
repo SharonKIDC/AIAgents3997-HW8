@@ -84,20 +84,25 @@ class TenantSDK:
         )
         if response.is_error() or not response.data:
             return None
-        data = response.data
+        # MCP server returns {"success": True, "tenant": {...}} or {"success": True, "tenant": None}
+        tenant_data = response.data.get("tenant")
+        if not tenant_data:
+            return None
         return TenantInfo(
-            building_number=data["building_number"],
-            apartment_number=data["apartment_number"],
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            phone=data["phone"],
-            is_owner=data["is_owner"],
+            building_number=tenant_data["building_number"],
+            apartment_number=tenant_data["apartment_number"],
+            first_name=tenant_data["first_name"],
+            last_name=tenant_data["last_name"],
+            phone=tenant_data["phone"],
+            is_owner=tenant_data["is_owner"],
             move_in_date=(
-                date.fromisoformat(data["move_in_date"]) if data.get("move_in_date") else None
-            ),  # noqa: E501
-            storage_number=data.get("storage_number"),
-            parking_slot_1=data.get("parking_slot_1"),
-            parking_slot_2=data.get("parking_slot_2"),
+                date.fromisoformat(tenant_data["move_in_date"])
+                if tenant_data.get("move_in_date")
+                else None
+            ),
+            storage_number=tenant_data.get("storage_number"),
+            parking_slot_1=tenant_data.get("parking_slot_1"),
+            parking_slot_2=tenant_data.get("parking_slot_2"),
         )
 
     def update_tenant(self, building: int, apartment: int, **updates) -> Dict[str, Any]:
