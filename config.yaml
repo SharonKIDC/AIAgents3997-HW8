@@ -1,0 +1,79 @@
+# Residential Complex Tenant Management System
+# Application Configuration
+
+# Building Configuration
+buildings:
+  - number: 11
+    total_apartments: 40
+  - number: 13
+    total_apartments: 35
+  - number: 15
+    total_apartments: 40
+  - number: 17
+    total_apartments: 35
+
+# MCP Server Configuration
+mcp_server:
+  host: ${MCP_SERVER_HOST}
+  port: ${MCP_SERVER_PORT}
+  max_connections: 100
+  timeout_seconds: 30
+  enable_cors: true
+  allowed_origins:
+    - http://localhost:3000
+    - http://localhost:8000
+
+# Database Configuration
+database:
+  type: excel
+  path: ${EXCEL_DATABASE_PATH}
+  backup_enabled: true
+  backup_interval_hours: 24
+  backup_path: ./data/backups/
+
+# Web UI Configuration
+web_ui:
+  api_base_url: ${REACT_APP_API_BASE_URL}
+  environment: ${REACT_APP_ENVIRONMENT}
+  session_timeout_minutes: 30
+  pagination_page_size: 20
+
+# AI Agent Configuration
+ai_agent:
+  provider: ${AI_MODEL_PROVIDER}
+  model_name: ${AI_MODEL_NAME}
+  max_tokens: 4000
+  temperature: 0.7
+  report_formats:
+    - markdown
+    - pdf
+  output_directory: ./reports/
+
+# WhatsApp Integration
+whatsapp:
+  enabled: ${WHATSAPP_API_ENABLED}
+  api_url: https://api.whatsapp.com/v1
+  rate_limit_per_minute: 10
+
+# Logging Configuration
+logging:
+  level: ${LOG_LEVEL}
+  file_path: ${LOG_FILE_PATH}
+  max_file_size_mb: 10
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Security Configuration
+security:
+  jwt_expiration_hours: ${JWT_EXPIRATION_HOURS}
+  password_min_length: 8
+  session_timeout_minutes: 30
+  max_login_attempts: 5
+  lockout_duration_minutes: 15
+
+# Feature Flags
+features:
+  enable_whatsapp_integration: false
+  enable_parking_management: true
+  enable_ai_reports: true
+  enable_historical_data: true

@@ -1,0 +1,156 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tenant-management"
+version = "1.0.0"
+description = "Residential Complex Tenant Management System with MCP architecture"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Development Team", email = "dev@example.com"}
+]
+keywords = ["tenant", "management", "mcp", "excel", "ai", "reports"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "openpyxl>=3.1.2",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.4.0",
+    "anthropic>=0.7.0",
+    "pyyaml>=6.0.1",
+    "python-dotenv>=1.0.0",
+    "python-dateutil>=2.8.2",
+    "reportlab>=4.0.0",
+    "markdown>=3.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.10.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-timeout>=2.1.0",
+    "black>=23.7.0",
+    "ruff>=0.1.0",
+    "isort>=5.12.0",
+    "pylint>=3.0.0",
+    "mypy>=1.5.0",
+    "bandit>=1.7.5",
+    "pre-commit>=3.3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/tenant-management"
+Documentation = "https://github.com/yourusername/tenant-management/docs"
+Repository = "https://github.com/yourusername/tenant-management"
+Issues = "https://github.com/yourusername/tenant-management/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+exclude = ["tests*", "docs*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+  | \.eggs
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.ruff_cache
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM"]
+ignore = []
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+known_first_party = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --cov=src --cov-report=html --cov-report=term --cov-report=xml"
+asyncio_mode = "auto"
+timeout = 300
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+precision = 2
+show_missing = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+follow_imports = "normal"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "venv"]
+skips = ["B101"]  # Skip assert_used warnings in tests
